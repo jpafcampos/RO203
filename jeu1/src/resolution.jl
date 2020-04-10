@@ -32,40 +32,48 @@ function cplexSolve(t::Array{Int, 2})
     # Create the model
     m = Model(CPLEX.Optimizer)
 
+    # x[i, j, k] = 1 if cell (i, j) has value k
+    @variable(m, x[1:n, 1:n, 1:n], Bin)
+
     # x[i, j, k, p] = 1 if cell (i, j) has value k, p the direction of visibility
-    @variable(m, x[1:n, 1:n, 1:n, 1:4], Bin)
+    @variable(m, g[1:n, 1:n, 1:n, 1:4], Bin)
 
     #Definition constrainte on x
     # Each cell (i, j) has one value k
-    @constraint(m, [i in 1:n, j in 1:n, p in 1:4], sum(x[i, j, k, p] for k in 1:n) == 1)
+    @constraint(m, [i in 1:n, j in 1:n], sum(x[i, j, k] for k in 1:n) == 1)
 
     # Each line l has one cell with value k
-    @constraint(m, [k in 1:n, l in 1:n, p in 1:4], sum(x[l, j, k,p] for j in 1:n) == 1)
+    @constraint(m, [k in 1:n, l in 1:n], sum(x[l, j, k] for j in 1:n) == 1)
 
     # Each column c has one cell with value k
-    @constraint(m, [k in 1:n, c in 1:n, p in 1:4], sum(x[i, c, k, p] for i in 1:n) == 1)
+    @constraint(m, [k in 1:n, c in 1:n], sum(x[i, c, k] for i in 1:n) == 1)
+
+    #Ling g and x
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n, p in 1:4], x[i,j,k] == g[i,j,])
 
 
     # Define constrainte on g
     # Define visible tower Left Side
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], g[i,j,k,1]>=g[i,n,k,1] for n in 1:j))
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], g[i,j,k,1]>=g[i,n,k,1] for n in 1:j))
 
     # number of visible tower in left side
-    @constraint(m,[i in 1:n, k in 1:4], sum(x[i,j,k,4] for j in 1:i)<=t[4,i])
+    @constraint(m,[i in 1:n, k in 1:4], sum(g[i,j,k,4] for j in 1:i)<=t[4,i])
 
     #right side
-    @constraint(m,[i in 1:n, k in 1:4], sum(x[i,j,k,2] for j in i:n)<=t[2,i])
+    @constraint(m,[i in 1:n, k in 1:4], sum(g[i,j,k,2] for j in i:n)<=t[2,i])
 
     #up side
-    @constraint(m,[j in 1:n, k in 1:4], sum(x[i,j,k,1] for i in 1:j)<=t[1,j])
+    @constraint(m,[j in 1:n, k in 1:4], sum(g[i,j,k,1] for i in 1:j)<=t[1,j])
 
     #down side
-    @constraint(m,[j in 1:n, k in 1:4], sum(x[i,j,k,3] for i in j:n)<=t[3,j])
+    @constraint(m,[j in 1:n, k in 1:4], sum(g[i,j,k,3] for i in j:n)<=t[3,j])
 
 
 
 
     # Maximize the top-left cell (reduce the problem symmetry)
-    @objective(m, Max, sum(x[1, 1, k, 1] for k in 1:n))
+    @objective(m, Max, sum(x[1, 1, k] + g[1,1,k,1] for k in 1:n))
 
     # Start a chronometer
     start = time()
@@ -80,18 +88,6 @@ function cplexSolve(t::Array{Int, 2})
 
 end
 """
-g = Array{Int64,2}
-for i in 1:n
-  for j in 1:n
-    for k in 1:n
-      x = JuMP.value.(x)
-      if x[i,j,k,1] == 1
-        g[i,j] = k
-      end
-    end
-  end
-end
-
 
 
 ############################### HEURISTIC ######################################
@@ -283,6 +279,31 @@ function isGridFeasible(t::Array{Int64, 2}, x::Array{Int,2})
     return isFeasible
 end
 
+############################# BINTOINT ####################################
+
+"""
+convert binary matrix to int matrix
+
+Arguments
+- x: array of size 3*n with values in [0, 1]
+
+return
+- g: array of 2*n with values in [0:n]
+
+"""
+
+function bintoint(x :: Array{Int64,3})
+  g = Array{Int64,2}
+  for i in 1:n
+    for j in 1:n
+      for k in 1:n
+        if x[i,j,k,1] == 1
+          g[i,j] = k
+        end
+      end
+    end
+  end
+end
 
 
 

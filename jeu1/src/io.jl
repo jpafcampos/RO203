@@ -34,7 +34,7 @@ function readInputFile(inputFile::String)
     close(datafile)
 
     n = length(split(data[1], ","))
-    t = Array{Int64}(undef, 2)
+    t = Array{Int64}(undef, 4,n)
     i = 1 # iterateur ligne
 
     # For each line of the input file

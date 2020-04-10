@@ -59,47 +59,40 @@ function isValid(t::Array{Int64, 2}, x::Array{Int,2}, l::Int64, c::Int64, v::Int
     end
 
     # Test if v respect the visibility constraint define by t
+    xcopy = copy(x)
+    xcopy[l,c] = v
+
     #lines
     l = 1
     while isValid && l <= n
       left = 1
       right = 1
-      mleft = x[l,1]
-      mright = x[l,n]
-      for i in 2:n
-        if x[l,i]>mleft
-          mleft = x[l,i]
+      for c in 1:n
+        if visible(xcopy,l,c,2)
+          right += 1
+        elseif visible(xcopy,l,c,4)
           left += 1
         end
-        if x[l,n-i+1]>right
-          mright = x[l,n-i+1]
-          right += 1
-        end
       end
-      if t[4,l]<left || t[2,l]<right
+      if t[4,l]>left || t[2,l]>right
         isValid = false
       end
       l += 1
     end
 
-    #columns
+    #column
     c = 1
     while isValid && c <= n
       up = 1
       down = 1
-      mup = x[1,c]
-      mdown = x[n,c]
-      for i in 2:n
-        if x[i,c]>mup
-          mup = x[i,c]
+      for l in 1:n
+        if visible(xcopy,l,c,3)
+          down += 1
+        elseif visible(xcopy,l,c,1)
           up += 1
         end
-        if x[n-i+1,c]>down
-          mdown = x[n-i+1,c]
-          down += 1
-        end
       end
-      if t[1,c]<up || t[3,c]<down
+      if t[1,c]>up || t[3,c]>down
         isValid = false
       end
       c += 1
@@ -108,6 +101,48 @@ function isValid(t::Array{Int64, 2}, x::Array{Int,2}, l::Int64, c::Int64, v::Int
     return isValid
 end
 
+################################# visible ######################################
+"""
+Test if cell (l, c) can be assigned value v
+
+Arguments
+- x: array of size n*n with values in [0, n] (0 if empty)
+- l, c: Int64, line and column
+- direction: Int64 (1=up, 2=right, 3=down, 4=left)
+
+Return: true the tower is visible in this direction
+"""
+
+function(x::Array{Int,2}, l::Int64, c::Int64, direction::Int64)
+  n= size(x,1)
+  bool = true
+  if direction == 1 #up
+    for i in 2:l
+      if x[i,c]>x[l,c]
+        bool = false
+      end
+    end
+  elseif direction == 2 #right
+    for i in c:n
+      if x[l,i]>x[l,c]
+        bool = false
+      end
+    end
+  elseif direction == 3 #down
+    for i in l:n
+      if x[i,c]>x[l,c]
+        bool = false
+      end
+    end
+  elseif direction == 4 #
+    for i in 2:c
+      if x[l,i]>x[l,c]
+        bool = false
+      end
+    end
+  end
+  return bool
+end
 
 ############################ GENERATEDATASET ###################################
 
