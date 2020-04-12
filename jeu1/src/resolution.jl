@@ -25,7 +25,6 @@ Return
 
 """
 
-"""
 function cplexSolve(t::Array{Int, 2})
     n = size(t, 2) #nbr d'elt par ligne
 
@@ -38,7 +37,7 @@ function cplexSolve(t::Array{Int, 2})
     # x[i, j, k, p] = 1 if cell (i, j) has value k, p the direction of visibility
     @variable(m, g[1:n, 1:n, 1:n, 1:4], Bin)
 
-    #Definition constrainte on x
+    ### Definition constrainte on x ###
     # Each cell (i, j) has one value k
     @constraint(m, [i in 1:n, j in 1:n], sum(x[i, j, k] for k in 1:n) == 1)
 
@@ -48,28 +47,45 @@ function cplexSolve(t::Array{Int, 2})
     # Each column c has one cell with value k
     @constraint(m, [k in 1:n, c in 1:n], sum(x[i, c, k] for i in 1:n) == 1)
 
-    #Ling g and x
-    @constraint(m, [i in 1:n, j in 1:n, k in 1:n, p in 1:4], x[i,j,k] == g[i,j,])
+
+    ### Ling g and x ###
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n, d in 1:4], x[i,j,k] >= g[i,j,k,d])
+
+    #one in the direction is visible
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], x[i,j,k]<=sum(g[i,c,h,4] for c in 1:j for h in 1:n))
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], x[i,j,k]<=sum(g[l,j,h,3] for l in j:n for h in 1:n))
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], x[i,j,k]<=sum(g[i,c,h,2] for c in j:n for h in 1:n))
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], x[i,j,k]<=sum(g[l,j,h,1] for l in 1:j for h in 1:n))
 
 
-    # Define constrainte on g
-    # Define visible tower Left Side
-    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], g[i,j,k,1]>=g[i,n,k,1] for n in 1:j))
-    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], g[i,j,k,1]>=g[i,n,k,1] for n in 1:j))
 
+    ### constrainte on g ###
+    # Define visible tower by Side
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], sum(g[i,m,h,4] for m in 1:j for h in k:n)>=x[i,j,k] )
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], sum(g[m,j,h,3] for m in i:n for h in k:n)>=x[i,j,k] )
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], sum(g[i,m,h,2] for m in j:n for h in k:n)>=x[i,j,k] )
+    @constraint(m, [i in 1:n, j in 1:n, k in 1:n], sum(g[m,j,h,1] for m in 1:i for h in k:n)>=x[i,j,k] )
+
+
+    ### visibility ###
     # number of visible tower in left side
-    @constraint(m,[i in 1:n, k in 1:4], sum(g[i,j,k,4] for j in 1:i)<=t[4,i])
+    @constraint(m,[i in 1:n], sum(g[i,j,k,4] for j in 1:n for k in 1:n)==t[4,i])
 
     #right side
-    @constraint(m,[i in 1:n, k in 1:4], sum(g[i,j,k,2] for j in i:n)<=t[2,i])
+    @constraint(m,[i in 1:n], sum(g[i,j,k,2] for j in 1:n for k in 1:n)==t[2,i])
 
     #up side
-    @constraint(m,[j in 1:n, k in 1:4], sum(g[i,j,k,1] for i in 1:j)<=t[1,j])
+    @constraint(m,[j in 1:n], sum(g[i,j,k,1] for i in 1:n for k in 1:n)==t[1,j])
 
     #down side
-    @constraint(m,[j in 1:n, k in 1:4], sum(g[i,j,k,3] for i in j:n)<=t[3,j])
+    @constraint(m,[j in 1:n], sum(g[i,j,k,3] for i in 1:n for k in 1:n)==t[3,j])
 
 
+    ### Border ###
+    @constraint(m, [i in 1:n], sum(g[i,1,k,4] for k in 1:n) == 1)
+    @constraint(m, [i in 1:n], sum(g[i,n,k,2] for k in 1:n) == 1)
+    @constraint(m, [j in 1:n], sum(g[1,j,k,1] for k in 1:n) == 1)
+    @constraint(m, [j in 1:n], sum(g[n,j,k,3] for k in 1:n) == 1)
 
 
     # Maximize the top-left cell (reduce the problem symmetry)
@@ -84,10 +100,11 @@ function cplexSolve(t::Array{Int, 2})
     # Return:
     # 1 - true if an optimum is found
     # 2 - the resolution time
-    return JuMP.primal_status(m) == JuMP.MathOptInterface.FEASIBLE_POINT, x, time() - start
+    #return JuMP.primal_status(m) == JuMP.MathOptInterface.FEASIBLE_POINT, x, time() - start
+    JuMP.value.(x)
 
 end
-"""
+
 
 
 ############################### HEURISTIC ######################################
@@ -292,13 +309,13 @@ return
 
 """
 
-function bintoint(x :: Array{Int64,3})
-  g = Array{Int64,2}
+function bintoint(x :: Array{Float64,3})
+  g = Array{Float64,2}
   for i in 1:n
     for j in 1:n
       for k in 1:n
         if x[i,j,k,1] == 1
-          g[i,j] = k
+          g[i,j] = Float64(k)
         end
       end
     end
