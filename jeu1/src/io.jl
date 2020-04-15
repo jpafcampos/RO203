@@ -59,7 +59,7 @@ Display a grid represented by a 2-dimensional array
 Argument:
 - t: array of size 4*n with values in [1, n]
 """
-function displayGrid(t::Array{Int64, 2})
+function displayGrid(t::Array{Float64, 3})
 
     n = size(t, 2)
 

@@ -1,5 +1,8 @@
 # This file contains methods to solve an instance (heuristically or with CPLEX)
-using CPLEX
+
+#using CPLEX
+using JuMP
+using Cbc
 
 include("generation.jl")
 
@@ -25,11 +28,15 @@ Return
 
 """
 
-function cplexSolve(t::Array{Int, 2})
+function cplexSolve(t::Array{Int64, 2})
     n = size(t, 2) #nbr d'elt par ligne
 
-    # Create the model
-    m = Model(CPLEX.Optimizer)
+    # Create the model (two possible solvers, chose one)
+    #CPLEX
+    #m = Model(CPLEX.Optimizer)
+    #CBC
+    m = Model(with_optimizer(Cbc.Optimizer))
+
 
     # x[i, j, k] = 1 if cell (i, j) has value k
     @variable(m, x[1:n, 1:n, 1:n], Bin)
@@ -48,7 +55,7 @@ function cplexSolve(t::Array{Int, 2})
     @constraint(m, [k in 1:n, c in 1:n], sum(x[i, c, k] for i in 1:n) == 1)
 
 
-    ### Ling g and x ###
+    ### Link g and x ###
     @constraint(m, [i in 1:n, j in 1:n, k in 1:n, d in 1:4], x[i,j,k] >= g[i,j,k,d])
 
     #one in the direction is visible
