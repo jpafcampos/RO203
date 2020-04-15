@@ -123,7 +123,7 @@ Heuristically solve an instance
 
 function heuristicSolve(t::Array{Int, 2}, checkFeasibility::Bool)
   n = size(t, 2)
-  g = Array{Int64,2} #grid of the problem
+  g = Int.(zeros(n,n)) #grid of the problem
 
   # True if the grid has completely been filled
   gridFilled = false

@@ -36,14 +36,14 @@ Return: true if t[l, c] can be set to v; false otherwise
 function isValid(t::Array{Int64, 2}, x::Array{Int,2}, l::Int64, c::Int64, v::Int64)
 
     n = size(t, 2)
-    isValid = true
+    valid = true
 
     # Test if v appears in column c
     l2 = 1
 
-    while isValid && l2 <= n
-        if t[l2, c] == v
-            isValid = false
+    while valid && l2 <= n
+        if x[l2, c] == v
+            valid = false
         end
         l2 += 1
     end
@@ -51,8 +51,8 @@ function isValid(t::Array{Int64, 2}, x::Array{Int,2}, l::Int64, c::Int64, v::Int
     # Test if v appears in line l
     c2 = 1
 
-    while isValid && c2 <= n
-        if t[l, c2] == v
+    while valid && c2 <= n
+        if x[l, c2] == v
             isValid = false
         end
         c2 += 1
@@ -63,42 +63,39 @@ function isValid(t::Array{Int64, 2}, x::Array{Int,2}, l::Int64, c::Int64, v::Int
     xcopy[l,c] = v
 
     #lines
-    l = 1
-    while isValid && l <= n
-      left = 1
-      right = 1
-      for c in 1:n
-        if visible(xcopy,l,c,2)
-          right += 1
-        elseif visible(xcopy,l,c,4)
-          left += 1
-        end
+    c3 = 1
+    left = 1
+    right = 1
+    while valid && c3 <= n
+      println(c3, "  ")
+      if visible(xcopy,l,c3,2)
+        right += 1
+      elseif visible(xcopy,l,c3,4)
+        left += 1
       end
-      if t[4,l]>left || t[2,l]>right
-        isValid = false
+      if t[4,l]<left || t[2,l]<right
+        valid = false
       end
-      l += 1
+      c3 += 1
     end
 
     #column
-    c = 1
-    while isValid && c <= n
-      up = 1
-      down = 1
-      for l in 1:n
-        if visible(xcopy,l,c,3)
-          down += 1
-        elseif visible(xcopy,l,c,1)
-          up += 1
-        end
+    l3 = 1
+    up = 1
+    down = 1
+    while valid && l3 <= n
+      if visible(xcopy,l3,c,2)
+        right += 1
+      elseif visible(xcopy,l3,c,4)
+        left += 1
       end
-      if t[1,c]>up || t[3,c]>down
-        isValid = false
+      if t[1,c]<up || t[3,c]<down
+        valid = false
       end
-      c += 1
+      l3 += 1
     end
 
-    return isValid
+    return valid
 end
 
 ################################# visible ######################################
@@ -113,7 +110,7 @@ Arguments
 Return: true the tower is visible in this direction
 """
 
-function(x::Array{Int,2}, l::Int64, c::Int64, direction::Int64)
+function visible(x::Array{Int,2}, l::Int64, c::Int64, direction::Int64)
   n= size(x,1)
   bool = true
   if direction == 1 #up
