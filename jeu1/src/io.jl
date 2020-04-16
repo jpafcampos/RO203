@@ -6,6 +6,8 @@ import GR
 
 TOL = 0.00001
 
+################################# READFILE #####################################
+
 """
 Read an instance from an input file
 
@@ -52,6 +54,9 @@ function readInputFile(inputFile::String)
     return t
 end
 
+
+############################### DISPLAYGRID ####################################
+
 """"
 
 Display a grid represented by a 2-dimensional array
@@ -90,12 +95,14 @@ function displayGrid(t::Array{Int64, 2})
     end
 end
 
+############################### DISPLAYSOL #####################################
 
 """
 Display cplex solution
 
 Argument
 - x: 3-dimensional variables array such that x[i, j, k] = 1 if cell (i, j) has value k
+- t: array of size 4*n with values in [1, n]
 """
 function displaySolution(t::Array{Int64, 2}, x::Array{VariableRef,3})
 
@@ -136,8 +143,114 @@ function displaySolution(t::Array{Int64, 2}, x::Array{VariableRef,3})
     end
 end
 
-#################FAIRE ecriture d'instance ######################
 
+############################## SAVEINSTANCE ####################################
+
+
+"""
+Save a grid in a text file
+
+Argument
+- x: 2-dimensional array of size 4*n
+- outputFile: path of the output file
+"""
+function saveInstance(t::Array{Int64, 2},  outputFile::String)
+
+    n = size(t, 2)
+
+    # Open the output file
+    writer = open(outputFile, "w")
+
+    # For each cell (l, c) of the grid
+    for l in 1:4
+        for c in 1:n
+
+            # Write its value
+            if x[l, c] == 0
+                print(writer, " ")
+            else
+                print(writer, t[l, c])
+            end
+
+            if c != n
+                print(writer, ",")
+            else
+                println(writer, "")
+            end
+        end
+    end
+
+    close(writer)
+
+end
+
+
+############################# WRITESOLCPLEX ####################################
+
+
+"""
+Write a solution in an output stream
+
+Arguments
+- fout: the output stream (usually an output file)
+- x: 3-dimensional variables array such that x[i, j, k] = 1 if cell (i, j) has value k
+"""
+function writeSolution(fout::IOStream, x::Array{VariableRef,3})
+
+    # Convert the solution from x[i, j, k] variables into t[i, j] variables
+    n = size(x, 1)
+    t = Array{Int64}(undef, n, n)
+
+    for l in 1:n
+        for c in 1:n
+            for k in 1:n
+                if JuMP.value(x[l, c, k]) > TOL
+                    t[l, c] = k
+                end
+            end
+        end
+    end
+
+    # Write the solution
+    writeSolution(fout, t)
+
+end
+
+############################## WRITESOLHEUR ####################################
+
+"""
+Write a solution in an output stream
+
+Arguments
+- fout: the output stream (usually an output file)
+- X: 2-dimensional array of size n*n
+"""
+function writeSolution(fout::IOStream, x::Array{Int64, 2})
+
+    println(fout, "x = [")
+    n = size(X, 1)
+
+    for l in 1:n
+
+        print(fout, "[ ")
+
+        for c in 1:n
+            print(fout, string(x[l, c]) * " ")
+        end
+
+        endLine = "]"
+
+        if l != n
+            endLine *= ";"
+        end
+
+        println(fout, endLine)
+    end
+
+    println(fout, "]")
+end
+
+################################ WRITESOL ######################################
 
 """
 Create a pdf file which contains a performance diagram associated to the results of the ../res folder
