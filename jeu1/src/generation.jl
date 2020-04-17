@@ -1,5 +1,6 @@
 # This file contains methods to generate a data set of instances (i.e., sudoku grids)
 include("io.jl")
+include("resolution.jl")
 
 
 
@@ -11,98 +12,90 @@ Generate an n*n grid with a given density
 Argument
 - n: size of the grid
 """
-function generateInstance(n::Int64, density::Float64)
 
-    # TODO
-    println("In file generation.jl, in method generateInstance(), TODO: generate an instance")
-
-end
-"""
 function generateInstance(n::Int64)
 
-    # True if the current grid has no conflicts
-    # (i.e., not twice the same value on a line, column or block)
-    isGridValid = false
+  # True if the current grid has no conflicts
+  # (i.e., not twice the same value on a line, column or block)
+  isGridValid = false
 
-    t = []
+  t = []
 
-    # While a valid grid is not obtained
-    while !isGridValid
+  # While a valid grid is not obtained
+  while !isGridValid
+    t = Int64.(zeros(4, n)) #constraints
+    isGridValid = true
 
-        isGridValid = true
+    count = 0
+    l = 1
+    c = 1
 
-        t = zeros(4, n) #constraints
-        x = zeros(n, n) #grid
-        i = 1
+    while isGridValid && count < 4*n
+      v = ceil.(Int, n * rand())
 
-        # While the grid is valid and the required number of cells is not filled
-        while isGridValid && i < 4*n
+
+
+
+
+
+    for l in 1:4
+      for c in 1:n
+        while t[l,c] == 0
+          isGridValid = false
+          while !isGridValid
+            isGridValid = true
 
             # Randomly select a cell and a value
-            l = ceil.(Int, 4 * rand())
-            c = ceil.(Int, n * rand())
             v = ceil.(Int, n * rand())
 
-            # True if a value has already been assigned to the cell (l, c)
-            isFree = t[l, c] == 0
+            #constraints angles
 
-            # True if value v can be set in cell (l, c)
-            isValueValid = isValid(t, x, l, c, v)
+            if (c == 1 && l == 2) && t[1,n] == 1
+              v = 1
+            elseif (c == n && l == 3) && t[2,n] == 1
+              v = 1
+            elseif (c == n && l == 4) && t[3,1] == 1
+              v = 1
+            elseif (c == 1 && l == 4) && t[1,1] == 1
+              v = 1
+            end  #end if
 
-            # Number of value that we already tried to assign to cell (l, c)
-            attemptCount = 0
+            #more than one 1 or n is impossible in each line of t
+            if v == 1 && 1 in t
+              isGridValid = false
+            elseif v == n && n in t
+              isGridValid = false
+            elseif v == n && !(n in t)
+              ll = rem(l+2,4)
+              if ll == 0
+                ll = 4
+              end
+              t[ll,c] = 1
 
-            # Number of cells considered in the grid
-            testedCells = 1
-
-            # While is it not possible to assign the value to the cell
-            # (we assign a value if the cell is free and the value is valid)
-            # and while all the cells have not been considered
-            while !(isCellFree && isValueValid) && testedCells < n*n
-
-                # If the cell has already been assigned a number or if all the values have been tested for this cell
-                if !isCellFree || attemptCount == n
-
-                    # Go to the next cell
-                    if c < n
-                        c += 1
-                    else
-                        if l < n
-                            l += 1
-                            c = 1
-                        else
-                            l = 1
-                            c = 1
-                        end
-                    end
-
-                    testedCells += 1
-                    isCellFree = t[l, c] == 0
-                    isValueValid = isValid(t, l, c, v)
-                    attemptCount = 0
-
-                    # If the cell has not already been assigned a value and all the value have not all been tested
-                else
-                    attemptCount += 1
-                    v = rem(v, n) + 1
-                end
-            end
-
-            if testedCells == n*n
+            #angles cases
+            elseif v == 1 && (l == 2 && c == 1)
+              if t[1,n] != v
                 isGridValid = false
-            else
-                t[l, c] = v
-            end
+              end #end if
+            elseif v == 1 && (l == 3 && c == n)
+              if t[2,n] != v
+                isGridValid = false
+              end #end if
+            elseif v == 1 && (l == 3 && c == 1)
+              if t[4,n] != v
+                isGridValid = false
+              end #end if
+            end #end if
 
-            i += 1
-        end
-    end
+            t[l,c] = v
 
+          end #end while
+        end #end if
+      end # end for c
+    end #end for l
     return t
+end #end fct
 
-end
-
-"""
 
 
 ################################# ISVALID ######################################
@@ -233,7 +226,7 @@ function visible(x::Array{Int,2}, l::Int64, c::Int64, direction::Int64)
         bool = false
       end
     end
-  elseif direction == 4 #
+  elseif direction == 4 
     for i in 2:c
       if x[l,i]>x[l,c]
         bool = false
@@ -241,6 +234,53 @@ function visible(x::Array{Int,2}, l::Int64, c::Int64, direction::Int64)
     end
   end
   return bool
+end
+
+
+################################ NBVISIBLE #####################################
+"""
+Test if cell (l, c) can be assigned value v
+
+Arguments
+- x: array of size n*n with values in [0, n] (0 if empty)
+- k: Int64, value at position k
+- direction: Int64 (1=up, 2=right, 3=down, 4=left)
+
+Return: the number of visible towers
+"""
+
+function nbvisible (x::Array{Int,2}, k::Int64, direction::Int64)
+  n= size(x,1)
+  v = 0
+  if d == 1
+    for i in 1:n
+      if visible(x, i,k,1)
+        v += 1
+      end
+    end
+  end
+  elseif d == 2
+    for i in 1:n
+      if visible(x, k,i,2)
+        v += 1
+      end
+    end
+  end
+  elseif d == 3
+    for i in 1:n
+      if visible(x, i,k,3)
+        v += 1
+      end
+    end
+  end
+  elseif d == 4
+    for i in 1:n
+      if visible(x, k,i,4)
+        v += 1
+      end
+    end
+  end
+  return v
 end
 
 ############################ GENERATEDATASET ###################################
@@ -251,34 +291,21 @@ Generate all the instances
 Remark: a grid is generated only if the corresponding output file does not already exist
 
 """
-function generateDataSet()
-
-    # TODO
-    println("In file generation.jl, in method generateDataSet(), TODO: generate an instance")
-
-end
-
-"""
 
 function generateDataSet()
 
     # For each grid size considered
-    for size in 4:6[4, 9, 16, 25]
+    for size in [5, 6, 8, 10]
 
-        # For each grid density considered
-        for density in 0.1:0.2:0.3
+        # Generate 10 instances
+        for instance in 1:10
 
-            # Generate 10 instances
-            for instance in 1:10
+            fileName = "../data/instance_n" * string(size) * "_" * string(instance) * ".txt"
 
-                fileName = "../data/instance_t" * string(size) * "_d" * string(density) * "_" * string(instance) * ".txt"
-
-                if !isfile(fileName)
-                    println("-- Generating file " * fileName)
-                    saveInstance(generateInstance(size, density), fileName)
-                end
+            if !isfile(fileName)
+                println("-- Generating file " * fileName)
+                saveInstance(generateInstance(size), fileName)
             end
         end
     end
 end
-"""

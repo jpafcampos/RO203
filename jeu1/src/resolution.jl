@@ -4,7 +4,7 @@
 using JuMP
 using Cbc
 
-include("generation.jl")
+#include("generation.jl")
 
 TOL = 0.00001
 
@@ -33,9 +33,9 @@ function cplexSolve(t::Array{Int64, 2})
 
     # Create the model (two possible solvers, chose one)
     #CPLEX
-    #m = Model(CPLEX.Optimizer)
+    m = Model(CPLEX.Optimizer)
     #CBC
-    m = Model(with_optimizer(Cbc.Optimizer))
+    #m = Model(with_optimizer(Cbc.Optimizer))
 
 
     # x[i, j, k] = 1 if cell (i, j) has value k
@@ -121,6 +121,7 @@ Heuristically solve an instance
 - t: array of size 4*n with values in [1, n]
 """
 
+"""
 function heuristicSolve(t::Array{Int, 2}, checkFeasibility::Bool)
   n = size(t, 2)
   g = Int.(zeros(n,n)) #grid of the problem
@@ -220,7 +221,7 @@ function heuristicSolve(t::Array{Int, 2}, checkFeasibility::Bool)
   return gridStillFeasible, g
 
 end
-
+"""
 ############################ POSSIBLEVALUES ####################################
 
 """
@@ -235,6 +236,7 @@ Return
 - values: array of integers which do not appear on line l, column c or in the block of (l, c)
 """
 
+"""
 function possibleValues(t::Array{Int, 2}, x::Array{Int,2}, l::Int64, c::Int64)
 
   values = Array{Int64, 1}()
@@ -247,7 +249,7 @@ function possibleValues(t::Array{Int, 2}, x::Array{Int,2}, l::Int64, c::Int64)
   return values
 end
 
-
+"""
 ############################# TESTFEASIBLE ####################################
 
 """
@@ -258,6 +260,7 @@ Arguments
 - x: array of size n*n with values in [0, n] (0 if empty)
 """
 
+"""
 function isGridFeasible(t::Array{Int64, 2}, x::Array{Int,2})
 
     n = size(t, 2)
@@ -302,7 +305,7 @@ function isGridFeasible(t::Array{Int64, 2}, x::Array{Int,2})
 
     return isFeasible
 end
-
+"""
 ############################# BINTOINT ####################################
 
 """
