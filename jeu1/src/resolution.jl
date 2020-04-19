@@ -3,6 +3,8 @@
 #using CPLEX
 using JuMP
 using Cbc
+using CPLEX
+
 
 #include("generation.jl")
 
@@ -107,8 +109,8 @@ function cplexSolve(t::Array{Int64, 2})
     # Return:
     # 1 - true if an optimum is found
     # 2 - the resolution time
-    #return JuMP.primal_status(m) == JuMP.MathOptInterface.FEASIBLE_POINT, x, time() - start
-    JuMP.value.(x)
+    isSolved = JuMP.primal_status(m) == JuMP.MathOptInterface.FEASIBLE_POINT
+    return isSolved, x, time() - start
 
 end
 
@@ -449,6 +451,60 @@ function solveDataSet()
             include(outputFile)
             println(resolutionMethod[methodId], " optimal: ", isOptimal)
             println(resolutionMethod[methodId], " time: " * string(round(solveTime, sigdigits=2)) * "s\n")
+        end
+    end
+end
+
+
+############################## TRI INSTANCE #####################################
+
+"""
+give a instance valid
+
+Remark: a grid is generated only if the corresponding output file does not already exist
+
+Argument:
+- t: array of size 4*n with values in [1, n]
+
+return: 
+- t: array of size 4*n with values in [1, n]
+"""
+
+function tri_instance(t::Array{Int,2})
+    x = []
+    n = size(t,2)
+    bool, x, time = cplexSolve(t)
+    while !bool
+        t = generateInstance(n)
+        bool, x, time = cplexSolve(t)
+    end
+    return t
+end
+
+
+############################ GENERATEDATASET ###################################
+
+"""
+Generate all the instances
+
+Remark: a grid is generated only if the corresponding output file does not already exist
+
+"""
+
+function generateDataSet()
+
+    # For each grid size considered
+    for size in [5, 6, 8, 10]
+
+        # Generate 10 instances
+        for instance in 1:10
+
+            fileName = "../data/instance_n" * string(size) * "_" * string(instance) * ".txt"
+
+            if !isfile(fileName)
+                println("-- Generating file " * fileName)
+                saveInstance(generateInstance(size), fileName)
+            end
         end
     end
 end
