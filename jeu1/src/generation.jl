@@ -12,7 +12,7 @@ Generate an n*n grid with a given density
 Argument
 - n: size of the grid
 """
-
+"""
 function generateInstance(n::Int64)
 
   # True if the current grid has no conflicts
@@ -96,7 +96,7 @@ function generateInstance(n::Int64)
     return t
 end #end fct
 
-
+"""
 
 ################################# ISVALID ######################################
 
@@ -249,31 +249,29 @@ Arguments
 Return: the number of visible towers
 """
 
-function nbvisible (x::Array{Int,2}, k::Int64, direction::Int64)
+function nbvisible(x::Array{Int,2}, k::Int64, direction::Int64)
   n= size(x,1)
   v = 0
-  if d == 1
+  if direction == 1
     for i in 1:n
       if visible(x, i,k,1)
         v += 1
       end
     end
-  end
-  elseif d == 2
+
+  elseif direction == 2
     for i in 1:n
       if visible(x, k,i,2)
         v += 1
       end
     end
-  end
-  elseif d == 3
+  elseif direction == 3
     for i in 1:n
       if visible(x, i,k,3)
         v += 1
       end
     end
-  end
-  elseif d == 4
+  elseif direction == 4
     for i in 1:n
       if visible(x, k,i,4)
         v += 1
