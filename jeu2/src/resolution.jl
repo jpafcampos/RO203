@@ -8,13 +8,43 @@ TOL = 0.00001
 """
 Solve an instance with CPLEX
 """
-function cplexSolve()
+function cplexSolve(grid::Array{Int64, 2})
+
+    n = size(grid, 1) #taille de la grille
 
     # Create the model
-    m = Model(with_optimizer(CPLEX.Optimizer))
+    m = Model(CPLEX.Optimizer)
 
-    # TODO
-    println("In file resolution.jl, in method cplexSolve(), TODO: fix input and output, define the model")
+    #variable d'environnement au coup k
+    @variable(m, x[1:n, 1:n, 1:n*n], Int64)
+    #variable pour le coup k
+    @variable(m, y[1:n, 1:n, 1:4, 1:n*n], Bin)
+
+    
+
+    #constraints of the grid
+    # 1 : bas  ;  2 : gauche  ;  3 : haut  ;  4 : droite
+    @constraints(m, [i in 1:n, j in 1:n], x[i,j,1] == grid[i,j])
+    @constraints(m, [i in 1:n, k in 1:n*n], y[i,1,2,k] == 0)
+    @constraints(m, [i in 1:n, k in 1:n*n], y[i,n,4,k] == 0)
+    @constraints(m, [j in 1:n, k in 1:n*n], y[1,j,3,k] == 0)
+    @constraints(m, [j in 1:n, k in 1:n*n], y[n,j,1,k] == 0)
+
+    for i in 1:n
+        for j in 1:n
+            if grid[i,j] == -1
+                @constraints(m, [d in 1:4, k in 1:n*n], y[i,j,d,k] == 0)
+            elseif grid[i,j-1] == -1
+                @constraints(m, [k in 1:n*n], y[i,j,2,k] == 0)
+            elseif grid[i,j+1] == -1
+                @constraints(m, [k in 1:n*n], y[i,j,4,k] == 0)
+            elseif grid[i-1,j] == -1
+                @constraints(m, [k in 1:n*n], y[i,j,3,k] == 0)
+            elseif grid[i+1,j] == -1
+                @constraints(m, [k in 1:n*n], y[i,j,1,k] == 0)
+            end
+        end
+    end
 
     # Start a chronometer
     start = time()
