@@ -3,7 +3,7 @@
 #using CPLEX
 using JuMP
 using Cbc
-using CPLEX
+#using CPLEX
 
 
 #include("generation.jl")
