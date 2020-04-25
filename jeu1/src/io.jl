@@ -157,6 +157,7 @@ Argument
 function saveInstance(t::Array{Int64, 2},  outputFile::String)
 
     n = size(t, 2)
+    println(t)
 
     # Open the output file
     writer = open(outputFile, "w")
@@ -166,10 +167,11 @@ function saveInstance(t::Array{Int64, 2},  outputFile::String)
         for c in 1:n
 
             # Write its value
-            if x[l, c] == 0
+            if t[l, c] == 0
                 print(writer, " ")
             else
                 print(writer, t[l, c])
+                println(t[l,c])
             end
 
             if c != n
@@ -204,12 +206,13 @@ function writeSolution(fout::IOStream, x::Array{VariableRef,3})
     for l in 1:n
         for c in 1:n
             for k in 1:n
-                if JuMP.value(x[l, c, k]) > TOL
+                if JuMP.value(x[l, c, k]) == 1
                     t[l, c] = k
                 end
             end
         end
     end
+    println("test1")
 
     # Write the solution
     writeSolution(fout, t)
@@ -228,7 +231,8 @@ Arguments
 function writeSolution(fout::IOStream, x::Array{Int64, 2})
 
     println(fout, "x = [")
-    n = size(X, 1)
+    n = size(x, 1)
+    println(typeof(fout))
 
     for l in 1:n
 
@@ -266,7 +270,7 @@ Prerequisites:
 """
 function performanceDiagram(outputFile::String)
 
-    resultFolder = "../res/"
+    resultFolder = "res/"
 
     # Maximal number of files in a subfolder
     maxSize = 0

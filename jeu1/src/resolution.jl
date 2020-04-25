@@ -2,11 +2,12 @@
 
 #using CPLEX
 using JuMP
-using Cbc
-#using CPLEX
+#using Cbc
+using CPLEX
 
 
-#include("generation.jl")
+include("generation.jl")
+#include("GA.jl")
 
 TOL = 0.00001
 
@@ -129,12 +130,11 @@ Remark: If an instance has previously been solved (either by cplex or the heuris
 
 function solveDataSet()
 
-    dataFolder = "../data/"
-    resFolder = "../res/"
+    dataFolder = "data/"
+    resFolder = "res/"
 
     # Array which contains the name of the resolution methods
     resolutionMethod = ["cplex","heuristique"]
-    #resolutionMethod = ["cplex", "heuristique"]
 
     # Array which contains the result folder of each resolution method
     resolutionFolder = resFolder .* resolutionMethod
@@ -156,16 +156,13 @@ function solveDataSet()
         println("-- Resolution of ", file)
         t = readInputFile(dataFolder * file)
 
-        # TODO
-        println("In file resolution.jl, in method solveDataSet(), TODO: read value returned by readInputFile()")
-
         # For each resolution method
         for methodId in 1:size(resolutionMethod, 1)
 
             outputFile = resolutionFolder[methodId] * "/" * file
 
             # If the instance has not already been solved by this method
-            if !isfile(outputFile)
+            #if !isfile(outputFile)
 
                 fout = open(outputFile, "w")
 
@@ -176,10 +173,11 @@ function solveDataSet()
                 if resolutionMethod[methodId] == "cplex"
 
                     # Solve it and get the results
-                    isOptimal, resolutionTime = cplexSolve(t)
+                    isOptimal, x, resolutionTime = cplexSolve(t)
+                    println(isOptimal,resolutionTime)
 
                     # If a solution is found, write it
-                    if isOptimal #PB NE DIT PAS SI PAS OPTI
+                    if isOptimal 
                         writeSolution(fout, x)
                     end
 
@@ -193,11 +191,13 @@ function solveDataSet()
                     solution = []
 
                     # While the grid is not solved and less than 100 seconds are elapsed
-                    while !isOptimal && resolutionTime < 100
+                    while !isOptimal && resolutionTime < 1000
                         print(".")
+                        Tpop = 20 #taille de la population
+                        n = size(t,2)
 
                         # Solve it and get the results
-                        isOptimal, resolutionTime = heuristicSolve() #CHECKER BON RETOUR
+                        isOptimal, ind = GA(n,Tpop,t) #CHECKER BON RETOUR
 
                         # Stop the chronometer
                         resolutionTime = time() - startingTime
@@ -215,10 +215,8 @@ function solveDataSet()
                 println(fout, "solveTime = ", resolutionTime)
                 println(fout, "isOptimal = ", isOptimal)
 
-                # TODO
-                println("In file resolution.jl, in method solveDataSet(), TODO: write the solution in fout")
                 close(fout)
-            end
+            #end
 
 
             # Display the results obtained with the method on the current instance
@@ -232,29 +230,3 @@ end
 
 
 
-############################ GENERATEDATASET ###################################
-
-"""
-Generate all the instances
-
-Remark: a grid is generated only if the corresponding output file does not already exist
-
-"""
-
-function generateDataSet()
-
-    # For each grid size considered
-    for size in [5, 6, 8, 10]
-
-        # Generate 10 instances
-        for instance in 1:10
-
-            fileName = "../data/instance_n" * string(size) * "_" * string(instance) * ".txt"
-
-            if !isfile(fileName)
-                println("-- Generating file " * fileName)
-                saveInstance(generateInstance(size), fileName) #IMPLEMENTER LE TRI
-            end
-        end
-    end
-end
