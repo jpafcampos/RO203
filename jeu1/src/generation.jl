@@ -1,6 +1,5 @@
 # This file contains methods to generate a data set of instances (i.e., sudoku grids)
 include("io.jl")
-include("resolution.jl")
 using Random
 
 function roll(arr, step)
@@ -9,7 +8,7 @@ end
 
 ############################ GENERATE FILLED GRID ##############################
 
-function generateRandomIndividual(n) 
+function generateRandomInd(n) 
   seed = Int64(ceil(40*rand()));
   size = n*n;
   individual = Array{Int64, 2}(undef, n, n)
@@ -56,7 +55,7 @@ Argument
 
 function generateInstance(n)
 
-  matrix = generateRandomIndividual(n)
+  matrix = generateRandomInd(n)
   t = zeros(Int64, 4 , n)
 
   for i in 1:4
@@ -159,3 +158,29 @@ function nbvisible(x, k, direction)
   return v
 end
 
+############################ GENERATEDATASET ###################################
+
+"""
+Generate all the instances
+
+Remark: a grid is generated only if the corresponding output file does not already exist
+
+"""
+
+function generateDataSet()
+
+    # For each grid size considered
+    for size in [5, 6, 8, 10]
+        ind = generateInstance(size)
+        # Generate 10 instances
+        for instance in 1:10
+
+            fileName = "data/instance_n" * string(size) * "_" * string(instance) * ".txt"
+
+            if !isfile(fileName)
+                println("-- Generating file " * fileName)
+                saveInstance(generateInstance(ind), fileName) 
+            end
+        end
+    end
+end

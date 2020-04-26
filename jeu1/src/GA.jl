@@ -337,7 +337,7 @@ end
 #------------------------------------------------
 function printIndividual(ind)
     n = sqrt(length(ind))
-    n = convert(Int32, n)
+    n = convert(Int64, n)
     individual = reshape(ind,n,n)
     println(individual')
 
@@ -685,13 +685,15 @@ function sortByFitness(pop, cont)
     n = size(pop,2)
     k = size(pop,1)
     n = sqrt(n)
-    n = convert(Int32, n)
-    fitArray = Array{Int32}(undef, k)
-    
+    n = convert(Int64, n)
+    fitArray = Array{Int64}(undef, k)
+
+
     for i in 1:k
       ind = pop[i,:]
-      ind = reshape(ind, n,n)
-      ind = ind'
+      #ind = Int32.(ind)
+      #ind = reshape(ind,n,n)
+      #ind = ind'
       fitArray[i] = fitness( ind, cont )  
     end
 
@@ -713,8 +715,12 @@ function GA(n, k, cont)
     currentBestFit = 0
     contPlateau = 0
 
+<<<<<<< HEAD
     while(!found && maxIter < 20000)
       println(maxIter)
+=======
+    while(!found && maxIter < 50000)
+>>>>>>> 6fb5df46b6961292daff4263244b898b2871347a
 
       fit, indexFit = sortByFitness(pop, cont)
 
