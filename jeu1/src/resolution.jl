@@ -134,7 +134,7 @@ function solveDataSet()
     resFolder = "res/"
 
     # Array which contains the name of the resolution methods
-    resolutionMethod = ["cplex","heuristique"]
+    resolutionMethod = ["cplex"]
 
     # Array which contains the result folder of each resolution method
     resolutionFolder = resFolder .* resolutionMethod
@@ -180,7 +180,7 @@ function solveDataSet()
                     if isOptimal 
                         writeSolution(fout, x)
                     end
-
+"""
                 # If the method is one of the heuristics
                 else
 
@@ -209,7 +209,7 @@ function solveDataSet()
                     # Write the solution (if any)
                     if isOptimal
                         writeSolution(fout, solution)
-                    end
+                    end """
                 end
 
                 println(fout, "solveTime = ", resolutionTime)

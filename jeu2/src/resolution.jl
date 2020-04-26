@@ -1,13 +1,19 @@
 # This file contains methods to solve an instance (heuristically or with CPLEX)
 using CPLEX
+using JuMP
+#using Cbc
 
-include("generation.jl")
+include("io.jl")
 
 TOL = 0.00001
+
+
+############################### CPLEX ######################################
 
 """
 Solve an instance with CPLEX
 """
+
 function cplexSolve(grid::Array{Int64, 2})
 
     n = size(grid, 1) #taille de la grille
@@ -21,7 +27,7 @@ function cplexSolve(grid::Array{Int64, 2})
     @variable(m, y[1:n, 1:n, 1:4, 1:n*n], Bin)
 
     
-
+    """
     #constraints of the grid
     # 1 : bas  ;  2 : gauche  ;  3 : haut  ;  4 : droite
     @constraints(m, [i in 1:n, j in 1:n], x[i,j,1] == grid[i,j])
@@ -45,7 +51,7 @@ function cplexSolve(grid::Array{Int64, 2})
             end
         end
     end
-
+    """
     # Start a chronometer
     start = time()
 
@@ -59,32 +65,38 @@ function cplexSolve(grid::Array{Int64, 2})
     
 end
 
+############## PB DE TYPE A REGLER ENCORE #########################
+
+############################# HEURISTIC ####################################
 
 """
-Heuristically solve an instance
-- tk: array of size n*n with values in {-1;0;1} at the beginning
+Heuristically solve an instance (on parcourt toutes les branches)
+
+- tk: array of size n*n with values in {0;1;2} at the beginning
 """
-function heuristicSolve(t0::Array{Int64, 2})
-    Nb = 32 #nbr boules #faire une fct count ?
+
+function heuristicSolve(t0::Array{Int64,2}) 
+    Nb = 32 #nbr boules 
     move = zeros(Int64,Nb-1,3)
-    iteration = zeros(Int64, Nb-1, 32) #choix coup à l'itération k
+    iteration = zeros(Int64,Nb-1,20) #choix coup à l'itération k ( 20 coup max)
     #isSolution = false 
     tk = t0
-
-    
 
     while Nb != 1 
         M = possiblemove(tk) #possible move in the grid
         N = size(M,1) #number of move 
         branch = true
+        rand = ceil.(Int,N*rand())
+        attempts = 0 # number of move at tk
 
-        while """!isSolution && """ N != 0
+        while attempts != N &&  N != 0
 
             if branch
                 rand = ceil.(Int, N * rand())
+                attempts = 0
             end
 
-            if iteration[32-Nb +1, rand] != 1
+            if iteration[32-Nb+1,rand] != 1
                 l = M[rand,1]
                 c = M[rand,2]
                 d = M[rand,3]
@@ -102,21 +114,26 @@ function heuristicSolve(t0::Array{Int64, 2})
                     rand = N
                 end
                 branch = false
+                attempts += 1 
             end
         
         end
 
-        if N == 0
+        #if no possible move or all move already test go back
+        if N == 0 || attempts == N
             unmove(tk, l, c, d)
             Nb += 1
             move[32-Nb] = [0, 0, 0]
+            iteration[32-Nb +1] = zeros(Int64, 20)
         end
 
 
     end
-    return move
+    return move 
 end 
 
+
+############################# ISVALID ####################################
 
 """
 Test if cell (l, c) can be assigned value v
@@ -167,11 +184,10 @@ function isValid(t::Array{Int64, 2}, l::Int64, c::Int64, v::Int64)
                 isValid = false
         end
     end        
-    return isValid
-    
+    return isValid   
 end
 
-
+############################# POSSIBLEMOVE ####################################
 
 """
 give the possible move
@@ -198,6 +214,7 @@ function possiblemove(t::Array{Int64, 2})
     return mv
 end
 
+############################# MOVE ####################################
 
 """
 one move 
@@ -232,9 +249,10 @@ function move(tk::Array{Int64, 2}, i::Int64, j::Int64, d::Int64)
             tk[i,j+2] = 1
         end
     end
-return tk    
+    return tk    
 end 
 
+############################# UNMOVE ####################################
 
 """
 unmove 
@@ -267,9 +285,10 @@ function unmove(tk::Array{Int64, 2}, i::Int64, j::Int64, d::Int64)
         tk[i,j+1] = 1
         tk[i,j+2] = 0
     end
-return tk    
+    return tk    
 end 
 
+############################# SOLVEDATASET ####################################
 
 """
 Solve all the instances contained in "../data" through CPLEX and heuristics
@@ -280,8 +299,8 @@ Remark: If an instance has previously been solved (either by cplex or the heuris
 """
 function solveDataSet()
 
-    dataFolder = "../data/"
-    resFolder = "../res/"
+    dataFolder = "data/"
+    resFolder = "res/"
 
     # Array which contains the name of the resolution methods
     resolutionMethod = ["cplex"]
@@ -300,16 +319,15 @@ function solveDataSet()
     global isOptimal = false
     global solveTime = -1
 
+    file = filter(x->occursin(".txt", x), readdir(dataFolder))
+    t = readInputFile(dataFolder * file)
+
     # For each instance
     # (for each file in folder dataFolder which ends by ".txt")
-    for file in filter(x->occursin(".txt", x), readdir(dataFolder))  
+    for i in 1:10  
         
-        println("-- Resolution of ", file)
-        readInputFile(dataFolder * file)
+        println("-- Resolution of ", file*i)
 
-        # TODO
-        println("In file resolution.jl, in method solveDataSet(), TODO: read value returned by readInputFile()")
-        
         # For each resolution method
         for methodId in 1:size(resolutionMethod, 1)
             
@@ -330,12 +348,11 @@ function solveDataSet()
                     println("In file resolution.jl, in method solveDataSet(), TODO: fix cplexSolve() arguments and returned values")
                     
                     # Solve it and get the results
-                    isOptimal, resolutionTime = cplexSolve()
+                    isOptimal, resolutionTime = cplexSolve(t)
                     
                     # If a solution is found, write it
                     if isOptimal
-                        # TODO
-                        println("In file resolution.jl, in method solveDataSet(), TODO: write cplex solution in fout") 
+                        writeSolution(fout, x)
                     end
 
                 # If the method is one of the heuristics
@@ -372,8 +389,6 @@ function solveDataSet()
                 println(fout, "solveTime = ", resolutionTime) 
                 println(fout, "isOptimal = ", isOptimal)
                 
-                # TODO
-                println("In file resolution.jl, in method solveDataSet(), TODO: write the solution in fout") 
                 close(fout)
             end
 

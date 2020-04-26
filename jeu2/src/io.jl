@@ -4,6 +4,9 @@ using JuMP
 using Plots
 import GR
 
+
+############################### READINSTANCE ######################################
+
 """
 Read an instance from an input file
 
@@ -28,6 +31,8 @@ function readInputFile(inputFile::String)
 
 end
 
+############################### DIAGRAMMEPERF ######################################
+
 
 """
 Create a pdf file which contains a performance diagram associated to the results of the ../res folder
@@ -43,7 +48,7 @@ Prerequisites:
 """
 function performanceDiagram(outputFile::String)
 
-    resultFolder = "../res/"
+    resultFolder = "res/"
     
     # Maximal number of files in a subfolder
     maxSize = 0
@@ -189,8 +194,8 @@ Prerequisites:
 """
 function resultsArray(outputFile::String)
     
-    resultFolder = "../res/"
-    dataFolder = "../data/"
+    resultFolder = "res/"
+    dataFolder = "data/"
     
     # Maximal number of files in a subfolder
     maxSize = 0
