@@ -21,15 +21,49 @@ function readInputFile(inputFile::String)
     data = readlines(datafile)
     close(datafile)
 
+    n = length(split(data[1], ","))
+    t = Array{Int64}(undef, n,n)
+    i = 1 # iterateur ligne
+
     # For each line of the input file
     for line in data
+        lineSplit = split(line, ",")
+        if size(lineSplit, 1) == n
+            for k in 1:n
+              t[i, k] = parse(Int64, lineSplit[k])
+            end
+          else
+            println("error : entree")
+          end
+          i += 1
+    end
+    return t
+end
 
-        # TODO
-        println("In file io.jl, in method readInputFile(), TODO: read a line of the input file")
+############################### DISPLAYGRID ######################################
+
+function displayGrid(t::Array{Int64, 2})
+
+    n = size(t, 1)
+    
+    # For each cell (l, c)
+    for l in 1:n
+        for c in 1:n          
+            
+            if t[l,c] != 2
+                print(t[l, c])
+            else
+                print(" ")
+            end
+            if c != n
+                print(" ")
+            end
+        end
+        println("")
 
     end
-
 end
+
 
 ############################### DIAGRAMMEPERF ######################################
 
