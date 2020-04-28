@@ -10,5 +10,5 @@ x = [
 [ 3 10 1 7 4 8 9 6 2 5 ];
 [ 6 3 4 9 5 2 1 8 7 10 ]
 ]
-solveTime = 9.33899998664856
+solveTime = 9.5
 isOptimal = true

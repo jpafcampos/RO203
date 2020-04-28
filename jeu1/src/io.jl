@@ -254,7 +254,7 @@ function writeSolution(fout::IOStream, x::Array{Int64, 2})
     println(fout, "]")
 end
 
-################################ WRITESOL ######################################
+################################ DIAGRAM_PERF ######################################
 
 """
 Create a pdf file which contains a performance diagram associated to the results of the ../res folder
@@ -416,8 +416,8 @@ Prerequisites:
 """
 function resultsArray(outputFile::String)
 
-    resultFolder = "../res/"
-    dataFolder = "../data/"
+    resultFolder = "res/"
+    dataFolder = "data/"
 
     # Maximal number of files in a subfolder
     maxSize = 0

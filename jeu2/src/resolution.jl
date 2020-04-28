@@ -1,13 +1,19 @@
 # This file contains methods to solve an instance (heuristically or with CPLEX)
 using CPLEX
+using JuMP
+#using Cbc
 
-include("generation.jl")
+include("io.jl")
 
 TOL = 0.00001
+
+
+############################### CPLEX ######################################
 
 """
 Solve an instance with CPLEX
 """
+
 function cplexSolve(grid::Array{Int64, 2})
 
     n = size(grid, 1) #taille de la grille
@@ -21,7 +27,7 @@ function cplexSolve(grid::Array{Int64, 2})
     @variable(m, y[1:n, 1:n, 1:4, 1:n*n], Bin)
 
     
-
+    """
     #constraints of the grid
     # 1 : bas  ;  2 : gauche  ;  3 : haut  ;  4 : droite
     @constraints(m, [i in 1:n, j in 1:n], x[i,j,1] == grid[i,j])
@@ -45,7 +51,7 @@ function cplexSolve(grid::Array{Int64, 2})
             end
         end
     end
-
+    """
     # Start a chronometer
     start = time()
 
@@ -60,63 +66,157 @@ function cplexSolve(grid::Array{Int64, 2})
 end
 
 
+############################# HEURISTIC ####################################
+
 """
-Heuristically solve an instance
-- tk: array of size n*n with values in {-1;0;1} at the beginning
+Heuristically solve an instance (on parcourt toutes les branches)
+
+- tk: array of size n*n with values in {0;1;2} at the beginning
 """
-function heuristicSolve(t0::Array{Int64, 2})
-    Nb = 32 #nbr boules #faire une fct count ?
-    move = zeros(Int64,Nb-1,3)
-    iteration = zeros(Int64, Nb-1, 32) #choix coup à l'itération k
+
+function heuristicSolve()
+
+    t = readInputFile("data/test.txt") 
+    Nb = 32 #nbr boules 
+    Move = zeros(Int64,Nb,3)
+    iteration = zeros(Int64,Nb,20) #choix coup à l'itération k ( 20 coup max)
     #isSolution = false 
-    tk = t0
+    tk = t
+    rd = Int(1)
+    l = 5
+    c = 5
+    d = 1
+    branch = true
+    rd = ceil.(Int, N*rand())
+    attempts = 1 
+    a = 0   
 
     
-
     while Nb != 1 
         M = possiblemove(tk) #possible move in the grid
-        N = size(M,1) #number of move 
-        branch = true
-
-        while """!isSolution && """ N != 0
-
+        N = size(M,1)-2 #number of move
+        #println("N=",N)
+        #println("tentative ", attempts)
+        
+        while attempts != N &&  N != 0
+            
+            #println("tentative 2   ", attempts)
             if branch
-                rand = ceil.(Int, N * rand())
+                rd = ceil.(Int, N*rand())
+                attempts = 0
+                #println("rand")
             end
 
-            if iteration[32-Nb +1, rand] != 1
-                l = M[rand,1]
-                c = M[rand,2]
-                d = M[rand,3]
-                tk = move(tk, l, c, d)
-                Nb -= 1
-                move[32-Nb] = [l, c, d]
-                iteration[32-Nb, rand] = 1
+            #println("iteration ", 32-Nb+1,", ",rd)
+            #println("iteration[",32-Nb+1, ",", rd, "] = ",1)
+            a += 1
+            #if rem(a,100000) == 0
+            if Nb > 28 || Nb < 5 || rem(a,100000) == 0
+                println("-----------------------------------------------------------------------------------------")
+                println("")
+                println("Nb=",Nb)
+                println("N : ",N)
+                println(M)
+                displayGrid(tk)
 
+            end
+
+            if iteration[32-Nb+1,rd] != 1
+                #println("bug ",rd, " ",M)
+                l = M[rd+2][1]
+                c = M[rd+2][2]
+                d = M[rd+2][3]
+                #println(l, ",", c, ",", d)
+                #println(tk)
+                tk = move(tk, l, c, d)
+                #displayGrid(tk)
+                Nb -= 1
+                Move[32-Nb,1] = l 
+                Move[32-Nb,2] = c 
+                Move[32-Nb,3] = d
+
+                iteration[32-Nb, rd] = 1
+                #println(iteration)
+               
                 M = possiblemove(tk) #possible move in the grid
-                N = size(M,1) #number of move
+                #println("M=",M)
+                N = size(M,1)-2 #number of move
                 branch = true
-            else 
-                rand = rem(rand+1,N)
-                if rand == 0
-                    rand = N
+            elseif N == 0
+                #println("back")
+            elseif attempts != N
+                #println("N : ",N)
+                rd = rem(rd+1,N)
+                if rd == 0
+                    rd = N
                 end
                 branch = false
+                attempts += 1 
+                #println("next")
+                #println("rand = ", rd)
             end
-        
+            #println("Move = ", Move)
         end
+        #println("Move = ", Move)
+        #if no possible move or all move already test go back
+        """
+        if Nb == 32 
+            println(tk)
+            println(Move)
+            N = 1
+            attempts = 0
+            N
+        end 
+        """
 
-        if N == 0
-            unmove(tk, l, c, d)
+        if ((N == 0) || (attempts == N)) && Nb < 32
+            #println("000000-----------------------------------------------------------------------------------------")
+            
+            #println("notvalid, Nb= ", Nb)
+            #println("n=0 : ", N==0)
+            #println("attempts=N : ", attempts == N)
+            branch = true
+
+            l = Move[32-Nb,1]
+            c = Move[32-Nb,2]
+            d = Move[32-Nb,3]
+            #println(32-Nb)
+            #println(l, ",", c, ",", d)
+            #displayGrid(tk)
+            tk = unmove(tk, l, c, d)
+            #displayGrid(tk)
+
+            #println(iteration)
+
+            #println("N = ", N)
+            Move[32-Nb,1] = 0
+            Move[32-Nb,2] = 0
+            Move[32-Nb,3] = 0
+            #println("Move = ", Move)
             Nb += 1
-            move[32-Nb] = [0, 0, 0]
-        end
 
+            if N == 0
+                attempts += 1
+            elseif attempts == N
+                attempts = 1
+                #println("init")
+            end
+
+            #iteration[32-Nb+1,rd] = 1
+            for i in 1:size(iteration,2)
+                iteration[32-Nb+2,i] = 0
+            end
+            #println("erase ", 32-Nb+2)
+        end
+        
 
     end
-    return move
+    return Move 
+
 end 
 
+
+############################# ISVALID ####################################
 
 """
 Test if cell (l, c) can be assigned value v
@@ -125,53 +225,83 @@ Arguments
 - tk: array of size n*n with values in {-1;0;1} at the k-th iteration
 - l, c: considered cell
 - d: la direction de déplacement
-- 
+
 
 Return: true if t[l, c] can be set to v; false otherwise
 """
-function isValid(t::Array{Int64, 2}, l::Int64, c::Int64, v::Int64)
+function isValid(t::Array{Int64, 2}, l::Int64, c::Int64, d::Int64)
 
     n = size(t, 1)
     isValid = true
-    if t[l,c] == 0
+    if t[l,c] == 0 || t[l,c] == 2
         isValid = false
+        #println("no ball")
     else
         #grid border
         if (l == 1 || l == 2) && d == 3
             isValid = false
+            #println("border 1")
         elseif (l == n || l == n-1) && d == 1
             isValid = false
+            #println("border 2")
         elseif (c == 1 || c == 2) && d == 2
             isValid = false 
+            #println("border 3")
         elseif (c == n || c == n-1) && d == 4
             isValid = false
+            #println("border 4")
         #cross border
-        elseif (t[l-1,c] == -1 || t[l-2,c] == -1) && d == 3
-            isValid = false
-        elseif (t[l+1,c] == -1 || t[l+2,c] == -1) && d == 1
-            isValid = false    
-        elseif (t[l,c-1] == -1 || t[l,c-2] == -1) && d == 2
-            isValid = false            
-        elseif (t[l,c+1] == -1 || t[l,c+2] == -1) && d == 4
-            isValid = false 
+        elseif d == 3
+            if t[l-1,c] == 2 || t[l-2,c] == 2
+                isValid = false
+                #println("cross 1")
+            end
+        elseif d == 1
+            if t[l+1,c] == 2 || t[l+2,c] == 2
+                isValid = false
+                #println("cross 2")  
+            end  
+        elseif d == 2
+            if t[l,c-1] == 2 || t[l,c-2] == 2 
+                isValid = false
+                #println("cross 3")  
+            end          
+        elseif d == 4
+            if t[l,c+1] == 2 || t[l,c+2] == 2
+                isValid = false
+                #println("cross 4")
+            end 
         end 
+
         #possible move
         if isValid
-            if !(t[l-1,c] == 1 && t[l-2,c] == 0) && d == 1
-                isValid = false
-            elseif !(t[l+1,c] == 1 && t[l+2,c] == 0) && d == 3
-                isValid = false
-            elseif !(t[l,c+1] == 1 && t[l,c+2] == 0) && d == 4
-                isValid = false
-            elseif !(t[l,c-1] == 1 && t[l,c-2] == 0) && d == 2
-                isValid = false
+            if d == 1
+                if !(t[l+1,c] == 1 && t[l+2,c] == 0)
+                    isValid = false
+                    #println("config 1")
+                end           
+            elseif d == 2
+                if !(t[l,c-1] == 1 && t[l,c-2] == 0)
+                    isValid = false
+                    #println("config 2")
+                end 
+            elseif d == 4
+                if !(t[l,c+1] == 1 && t[l,c+2] == 0)
+                    isValid = false
+                    #println("config 3")
+                end
+            elseif d == 3
+                if !(t[l-1,c] == 1 && t[l-2,c] == 0)
+                    isValid = false
+                    #println("config 4")
+                end
+            end
         end
     end        
-    return isValid
-    
+    return isValid   
 end
 
-
+############################# POSSIBLEMOVE ####################################
 
 """
 give the possible move
@@ -184,7 +314,7 @@ Return: list of move possible
 function possiblemove(t::Array{Int64, 2})
 
     n = size(t, 1)
-    mv = Array{Int64, 2}
+    mv = [[0,0,0],[0,0,0]]
     for d in 1:4
         for l in 1:n
             for c in 1:n
@@ -198,6 +328,7 @@ function possiblemove(t::Array{Int64, 2})
     return mv
 end
 
+############################# MOVE ####################################
 
 """
 one move 
@@ -213,28 +344,32 @@ return :
 
 """
 function move(tk::Array{Int64, 2}, i::Int64, j::Int64, d::Int64)
+
     if isValid(tk,i,j,d)
+        #println("valid")
         if d == 1
+            #println("d1")
             tk[i,j] = 0
-            tk[i-1,j] = 0
-            tk[i-2,j] = 1
+            tk[i+1,j] = 0
+            tk[i+2,j] = 1
         elseif d == 2
             tk[i,j] = 0
             tk[i,j-1] = 0
             tk[i,j-2] = 1
         elseif d == 3
             tk[i,j] = 0
-            tk[i+1,j] = 0
-            tk[i+2,j] = 1
+            tk[i-1,j] = 0
+            tk[i-2,j] = 1
         elseif d == 4
             tk[i,j] = 0
             tk[i,j+1] = 0
             tk[i,j+2] = 1
         end
     end
-return tk    
+    return tk    
 end 
 
+############################# UNMOVE ####################################
 
 """
 unmove 
@@ -250,26 +385,29 @@ return :
 
 """
 function unmove(tk::Array{Int64, 2}, i::Int64, j::Int64, d::Int64)
+    #tkk = copy(tk)
+    #println("UNMOVE")
     if d == 1
         tk[i,j] = 1
-        tk[i-1,j] = 1
-        tk[i-2,j] = 0
+        tk[i+1,j] = 1
+        tk[i+2,j] = 0
     elseif d == 2
         tk[i,j] = 1
         tk[i,j-1] = 1
         tk[i,j-2] = 0
     elseif d == 3
         tk[i,j] = 1
-        tk[i+1,j] = 1
-        tk[i+2,j] = 0
+        tk[i-1,j] = 1
+        tk[i-2,j] = 0
     elseif d == 4
         tk[i,j] = 1
         tk[i,j+1] = 1
         tk[i,j+2] = 0
     end
-return tk    
+    return tk    
 end 
 
+############################# SOLVEDATASET ####################################
 
 """
 Solve all the instances contained in "../data" through CPLEX and heuristics
@@ -280,8 +418,8 @@ Remark: If an instance has previously been solved (either by cplex or the heuris
 """
 function solveDataSet()
 
-    dataFolder = "../data/"
-    resFolder = "../res/"
+    dataFolder = "data/"
+    resFolder = "res/"
 
     # Array which contains the name of the resolution methods
     resolutionMethod = ["cplex"]
@@ -300,16 +438,15 @@ function solveDataSet()
     global isOptimal = false
     global solveTime = -1
 
+    file = filter(x->occursin(".txt", x), readdir(dataFolder))
+    t = readInputFile(dataFolder * file)
+
     # For each instance
     # (for each file in folder dataFolder which ends by ".txt")
-    for file in filter(x->occursin(".txt", x), readdir(dataFolder))  
+    for i in 1:10  
         
-        println("-- Resolution of ", file)
-        readInputFile(dataFolder * file)
+        println("-- Resolution of ", file*i)
 
-        # TODO
-        println("In file resolution.jl, in method solveDataSet(), TODO: read value returned by readInputFile()")
-        
         # For each resolution method
         for methodId in 1:size(resolutionMethod, 1)
             
@@ -330,12 +467,11 @@ function solveDataSet()
                     println("In file resolution.jl, in method solveDataSet(), TODO: fix cplexSolve() arguments and returned values")
                     
                     # Solve it and get the results
-                    isOptimal, resolutionTime = cplexSolve()
+                    isOptimal, resolutionTime = cplexSolve(t)
                     
                     # If a solution is found, write it
                     if isOptimal
-                        # TODO
-                        println("In file resolution.jl, in method solveDataSet(), TODO: write cplex solution in fout") 
+                        writeSolution(fout, x)
                     end
 
                 # If the method is one of the heuristics
@@ -372,8 +508,6 @@ function solveDataSet()
                 println(fout, "solveTime = ", resolutionTime) 
                 println(fout, "isOptimal = ", isOptimal)
                 
-                # TODO
-                println("In file resolution.jl, in method solveDataSet(), TODO: write the solution in fout") 
                 close(fout)
             end
 

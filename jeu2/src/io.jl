@@ -4,6 +4,9 @@ using JuMP
 using Plots
 import GR
 
+
+############################### READINSTANCE ######################################
+
 """
 Read an instance from an input file
 
@@ -23,9 +26,26 @@ function readInputFile(inputFile::String)
 
     lineNb = 1
 
+    n = length(split(data[1], ","))
+    t = Array{Int64}(undef, n,n)
+    i = 1 # iterateur ligne
+
     # For each line of the input file
     for line in data
+        lineSplit = split(line, ",")
+        if size(lineSplit, 1) == n
+            for k in 1:n
+              t[i, k] = parse(Int64, lineSplit[k])
+            end
+          else
+            println("error : entree")
+          end
+          i += 1
+    end
+    return t
+end
 
+<<<<<<< HEAD
         lineSplit = split(line, ",")
 
         if size(lineSplit, 1) == n
@@ -43,8 +63,36 @@ function readInputFile(inputFile::String)
     end
 
     return t
+=======
+############################### DISPLAYGRID ######################################
+
+function displayGrid(t::Array{Int64, 2})
+
+    n = size(t, 1)
+    
+    # For each cell (l, c)
+    for l in 1:n
+        for c in 1:n          
+            
+            if t[l,c] != 2
+                print(t[l, c])
+            else
+                print(" ")
+            end
+            if c != n
+                print(" ")
+            end
+        end
+        println("")
+
+    end
+end
+>>>>>>> 1c23a1351ead8ad30877885e3354abdc2c9c7f49
 
 end
+
+############################### DIAGRAMMEPERF ######################################
+
 
 """
 Create a pdf file which contains a performance diagram associated to the results of the ../res folder
@@ -60,7 +108,7 @@ Prerequisites:
 """
 function performanceDiagram(outputFile::String)
 
-    resultFolder = "../res/"
+    resultFolder = "res/"
     
     # Maximal number of files in a subfolder
     maxSize = 0
@@ -206,8 +254,8 @@ Prerequisites:
 """
 function resultsArray(outputFile::String)
     
-    resultFolder = "../res/"
-    dataFolder = "../data/"
+    resultFolder = "res/"
+    dataFolder = "data/"
     
     # Maximal number of files in a subfolder
     maxSize = 0
