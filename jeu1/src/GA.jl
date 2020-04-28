@@ -474,7 +474,7 @@ function mutation3(ind, n, cont)
   perm = randperm(MersenneTwister(seed), n)
   perm = shuffle!(perm) 
 
-  if rand()<0.8
+  if rand()<0.5
     v1 = perm[1]
     v2 = perm[2]
     rowIndex = ceil.(Int, n * rand())
@@ -708,6 +708,7 @@ end
 Genetic Algorithm
 """
 function GA(n, k, cont)
+    start = time()
     pop = generatePopulation(n,k)
     found = false
     ind = []
@@ -715,12 +716,8 @@ function GA(n, k, cont)
     currentBestFit = 0
     contPlateau = 0
 
-<<<<<<< HEAD
     while(!found && maxIter < 20000)
-      println(maxIter)
-=======
-    while(!found && maxIter < 50000)
->>>>>>> 6fb5df46b6961292daff4263244b898b2871347a
+      #println(maxIter)
 
       fit, indexFit = sortByFitness(pop, cont)
 
@@ -804,6 +801,8 @@ function GA(n, k, cont)
     end
 
     println(fitness(ind, cont))
+    println(time()- start)
+    println(maxIter)
     return pop, ind
 
 

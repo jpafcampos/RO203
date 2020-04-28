@@ -17,17 +17,34 @@ function readInputFile(inputFile::String)
 
     data = readlines(datafile)
     close(datafile)
+    
+    n = length(split(data[1], ","))
+    t = Array{Int64}(undef, n, n)
+
+    lineNb = 1
 
     # For each line of the input file
     for line in data
 
-        # TODO
-        println("In file io.jl, in method readInputFile(), TODO: read a line of the input file")
+        lineSplit = split(line, ",")
 
+        if size(lineSplit, 1) == n
+            for colNb in 1:n
+
+                if lineSplit[colNb] != " "
+                    t[lineNb, colNb] = parse(Int64, lineSplit[colNb])
+                else
+                    t[lineNb, colNb] = 0
+                end
+            end
+        end 
+        
+        lineNb += 1
     end
 
-end
+    return t
 
+end
 
 """
 Create a pdf file which contains a performance diagram associated to the results of the ../res folder
