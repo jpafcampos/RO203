@@ -20,6 +20,11 @@ function readInputFile(inputFile::String)
 
     data = readlines(datafile)
     close(datafile)
+    
+    n = length(split(data[1], ","))
+    t = Array{Int64}(undef, n, n)
+
+    lineNb = 1
 
     n = length(split(data[1], ","))
     t = Array{Int64}(undef, n,n)
@@ -40,6 +45,25 @@ function readInputFile(inputFile::String)
     return t
 end
 
+<<<<<<< HEAD
+        lineSplit = split(line, ",")
+
+        if size(lineSplit, 1) == n
+            for colNb in 1:n
+
+                if lineSplit[colNb] != " "
+                    t[lineNb, colNb] = parse(Int64, lineSplit[colNb])
+                else
+                    t[lineNb, colNb] = 0
+                end
+            end
+        end 
+        
+        lineNb += 1
+    end
+
+    return t
+=======
 ############################### DISPLAYGRID ######################################
 
 function displayGrid(t::Array{Int64, 2})
@@ -63,7 +87,9 @@ function displayGrid(t::Array{Int64, 2})
 
     end
 end
+>>>>>>> 1c23a1351ead8ad30877885e3354abdc2c9c7f49
 
+end
 
 ############################### WRITESOLUTION ######################################
 

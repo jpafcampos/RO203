@@ -2,8 +2,8 @@
 
 #using CPLEX
 using JuMP
-#using Cbc
-using CPLEX
+using Cbc
+#using CPLEX
 
 
 include("generation.jl")
@@ -36,9 +36,9 @@ function cplexSolve(t::Array{Int64, 2})
 
     # Create the model (two possible solvers, chose one)
     #CPLEX
-    m = Model(CPLEX.Optimizer)
+    #m = Model(CPLEX.Optimizer)
     #CBC
-    #m = Model(with_optimizer(Cbc.Optimizer))
+    m = Model(with_optimizer(Cbc.Optimizer))
 
 
     # x[i, j, k] = 1 if cell (i, j) has value k

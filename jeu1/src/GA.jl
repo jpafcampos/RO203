@@ -220,7 +220,7 @@ end
 
 #--------------------------------------------------------------
 function countDoubles(arr)
-  map = Int64.(zeros(length(arr)))
+  map = Int32.(zeros(length(arr)))
   numberOfDoubles = 0
   for i in 1:length(arr)
     map[arr[i]] += 1
@@ -570,9 +570,10 @@ return:
 offspring: matrice 2 x n, each line is a new individual
 """
 function recombination(p1, p2, cont, n)
+
     seed = Int64(ceil(40*rand()));
-    offspring1 = Array{Int64,2}(undef, n, n)
-    offspring2 = Array{Int64,2}(undef, n, n)
+    offspring1 = Array{Int32,2}(undef, n, n)
+    offspring2 = Array{Int32,2}(undef, n, n)
     perm = randperm(MersenneTwister(seed), n)
     perm = shuffle!(perm)
 
@@ -582,7 +583,7 @@ function recombination(p1, p2, cont, n)
     parent1 = parent1'
     parent2 = parent2'
 
-    rowIndex = 3
+    rowIndex = n-2
     #rowIndex = perm[1]
 
     if first(rand()) > 0.5
@@ -613,6 +614,8 @@ function recombination(p1, p2, cont, n)
 
     offspring[1,:] = refinement(flatten(offspring1'), n, cont)
     offspring[2,:] = refinement(flatten(offspring2'), n, cont)
+    #offspring[1,:] = flatten(offspring1')
+    #offspring[2,:] = flatten(offspring2')
 
     return offspring
     
@@ -654,7 +657,6 @@ function fitness(ind, cont)
     end
 
     numberOfDoubles = 0
-
     for i in 1:n
       numberOfDoubles += countDoubles(ind[i,:]')
       numberOfDoubles += countDoubles(ind[:,i]')
@@ -706,6 +708,7 @@ end
 Genetic Algorithm
 """
 function GA(n, k, cont)
+    start = time()
     pop = generatePopulation(n,k)
     found = false
     ind = []
@@ -713,18 +716,16 @@ function GA(n, k, cont)
     currentBestFit = 0
     contPlateau = 0
 
-    while(!found && maxIter < 50000)
+    while(!found && maxIter < 20000)
+      #println(maxIter)
 
       fit, indexFit = sortByFitness(pop, cont)
-      #println(fit[indexFit[1]])
-      #println(maxIter)
 
       bestInd = pop[indexFit[1], :]
       bestInd = bestInd'
       ind = bestInd
-      # println(ind)
       currentBestFit = fit[indexFit[1]]
-
+      println(currentBestFit)
       if fit[indexFit[1]] == n*4
         found = true
         ind = pop[indexFit[1],:]
@@ -736,8 +737,7 @@ function GA(n, k, cont)
       last = Int64(k/2)
       bestOnes = indexFit[1:last]
       bestOnes = shuffle(bestOnes)
-      #println(bestOnes)
-      #println(indexFit)
+
       for i in 1:2:k/2
         j = Int64(i)
         #kids = recombination(pop[indexFit[j],:]', pop[indexFit[j+1],:]', cont, n)
@@ -748,7 +748,8 @@ function GA(n, k, cont)
         offspring[j+1,:] = kid2
       end
 
-      if first(rand(1)) < 0.8
+      p = 0.9
+      if first(rand(1)) < p
         for i in 1:k/2
           j = Int64(i)
           offspring[j,:] = mutation(offspring[j,:], n)
@@ -756,21 +757,24 @@ function GA(n, k, cont)
         end
       end
 
-      if first(rand(1)) < 0.8
+      if first(rand(1)) < p
         for i in 1:k/2
           j = Int64(i)
           offspring[j,:] = mutation2(offspring[j,:], n)
         end
       end
 
-      if first(rand(1)) < 0.8
+      p = p - 0.001
+
+      p2 = 0.4
+      if first(rand(1)) < p2
         for i in 1:k/2
           j = Int64(i)
           offspring[j,:] = mutation3(offspring[j,:], n, cont)
         end
       end
 
-      if first(rand(1)) < 1
+      if first(rand(1)) < p2
         for i in 1:k/2
           j = Int64(i)
           if fitness(offspring[j,:], cont) >= n*4 - 3
@@ -778,16 +782,27 @@ function GA(n, k, cont)
           end
         end
       end
+      p2 = p2 + 0.01
+      
+      newPop = [pop; offspring]
+    
+      fit, indexFit = sortByFitness(newPop, cont)
 
-      for i in 1:k/2
-        j = Int64(i)
-        pop[indexFit[k-j+1], :] = offspring[j,:];
+      for i in 1:k
+        pop[i,:] = newPop[indexFit[i],:]
       end
 
+      #for i in 1:k/2
+      #  j = Int64(i)
+      #  pop[indexFit[k-j+1], :] = offspring[j,:];
+      #end
+
       maxIter += 1
-    
     end
+
     println(fitness(ind, cont))
+    println(time()- start)
+    println(maxIter)
     return pop, ind
 
 
