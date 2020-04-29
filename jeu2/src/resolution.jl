@@ -76,11 +76,14 @@ Heuristically solve an instance (on parcourt toutes les branches)
 
 function heuristicSolve()
 
-    t = readInputFile("data/test.txt") 
-    Nb = 32 #nbr boules 
+    t = readInputFile("data/test2.txt") 
+    init = 11
+    #init = 32
+    #Nb = 32 #nbr boules 
+    Nb = 11
     Move = zeros(Int64,Nb,3)
     iteration = zeros(Int64,Nb,20) #choix coup à l'itération k ( 20 coup max)
-    #isSolution = false 
+    isSolution = false 
     tk = t
     rd = Int(1)
     l = 5
@@ -89,59 +92,95 @@ function heuristicSolve()
     branch = true
     rd = ceil.(Int, N*rand())
     attempts = 1 
-    a = 0   
+    a = 0   #compteur
+    OPT = zeros(Int64,Nb,3)
+    Nbmin = init
 
     
-    while Nb != 1 
+    while Nb != 1 && a < 10000000
         M = possiblemove(tk) #possible move in the grid
         N = size(M,1)-2 #number of move
-        #println("N=",N)
-        #println("tentative ", attempts)
+        println("N=",N)
+        println("tentative ", attempts)
+        println(M)
+        a += 1
+
         
         while attempts != N &&  N != 0
             
             #println("tentative 2   ", attempts)
             if branch
                 rd = ceil.(Int, N*rand())
-                attempts = 0
-                #println("rand")
+                attempts = 1
+            
+                if Nb > 28 || Nb < 5 || rem(a,1000000) == 0
+                    #println(a)
+                    #println("rand")
+                end
             end
-
-            #println("iteration ", 32-Nb+1,", ",rd)
+            if Nb == init
+                println(iteration)
+                println("iteration[",32-Nb+1, ",", rd, "] = ",1)
+            end
             #println("iteration[",32-Nb+1, ",", rd, "] = ",1)
-            a += 1
+            #a += 1
             #if rem(a,100000) == 0
-            if Nb > 28 || Nb < 5 || rem(a,100000) == 0
+            """
+            if Nb > 28 || Nb < 5 
                 println("-----------------------------------------------------------------------------------------")
                 println("")
-                println("Nb=",Nb)
+                
                 println("N : ",N)
-                println(M)
-                displayGrid(tk)
+                #println(M)
+                #displayGrid(tk)
+                #println(iteration)
+                #println(l, ",", c, ",", d)
+                println(attempts)
+                #println(Move)
+                #println("iteration[",32-Nb+1, ",", rd, "] = ",1)
 
             end
-
-            if iteration[32-Nb+1,rd] != 1
+            """
+            if iteration[init-Nb+1,rd] != 1
                 #println("bug ",rd, " ",M)
                 l = M[rd+2][1]
                 c = M[rd+2][2]
                 d = M[rd+2][3]
-                #println(l, ",", c, ",", d)
-                #println(tk)
                 tk = move(tk, l, c, d)
-                #displayGrid(tk)
+                if Nb > 28 || Nb < 5 
+                    #println(l, ",", c, ",", d)
+                    #println("it=",32-Nb+1)
+                    #displayGrid(tk)
+                    #println(iteration)
+                end
+                #println(tk)
+                println("--------------------", Nb, "----------------")
+                
+                displayGrid(tk)
                 Nb -= 1
-                Move[32-Nb,1] = l 
-                Move[32-Nb,2] = c 
-                Move[32-Nb,3] = d
+                Move[init-Nb,1] = l 
+                Move[init-Nb,2] = c 
+                Move[init-Nb,3] = d
+                
+                #on attribue la réponse optimale
+                if Nb < Nbmin
+                    Nbmin = Nb
+                    OPT = deepcopy(Move)
+                end
 
-                iteration[32-Nb, rd] = 1
-                #println(iteration)
+                iteration[init-Nb, rd] = 1
+                println(iteration)
                
                 M = possiblemove(tk) #possible move in the grid
-                #println("M=",M)
+                println("M=",M)
                 N = size(M,1)-2 #number of move
                 branch = true
+                """
+                if Nb > 28 || Nb < 5 || rem(a,1000000) == 0
+                    println("M=",M)
+                    println(iteration)
+                end
+                """
             elseif N == 0
                 #println("back")
             elseif attempts != N
@@ -152,36 +191,33 @@ function heuristicSolve()
                 end
                 branch = false
                 attempts += 1 
-                #println("next")
+                """
+                if Nb > 28 || Nb < 5 
+                    println("next")
+                    println(attempts)
+                end
+                """
                 #println("rand = ", rd)
             end
-            #println("Move = ", Move)
+            println("Move = ", Move)
         end
         #println("Move = ", Move)
         #if no possible move or all move already test go back
-        """
-        if Nb == 32 
-            println(tk)
-            println(Move)
-            N = 1
-            attempts = 0
-            N
-        end 
-        """
 
-        if ((N == 0) || (attempts == N)) && Nb < 32
+
+        if ((N == 0) || (attempts == N)) && Nb != 1 && Nb != init
             #println("000000-----------------------------------------------------------------------------------------")
             
-            #println("notvalid, Nb= ", Nb)
+            println("notvalid, Nb= ", Nb)
             #println("n=0 : ", N==0)
             #println("attempts=N : ", attempts == N)
             branch = true
 
-            l = Move[32-Nb,1]
-            c = Move[32-Nb,2]
-            d = Move[32-Nb,3]
-            #println(32-Nb)
-            #println(l, ",", c, ",", d)
+            l = Move[init-Nb,1]
+            c = Move[init-Nb,2]
+            d = Move[init-Nb,3]
+            println(32-Nb)
+            println(l, ",", c, ",", d)
             #displayGrid(tk)
             tk = unmove(tk, l, c, d)
             #displayGrid(tk)
@@ -189,10 +225,12 @@ function heuristicSolve()
             #println(iteration)
 
             #println("N = ", N)
-            Move[32-Nb,1] = 0
-            Move[32-Nb,2] = 0
-            Move[32-Nb,3] = 0
-            #println("Move = ", Move)
+            Move[init-Nb,1] = 0
+            Move[init-Nb,2] = 0
+            Move[init-Nb,3] = 0
+            if Nb > 28 || Nb < 5 
+                println("Move = ", Move)
+            end
             Nb += 1
 
             if N == 0
@@ -202,16 +240,29 @@ function heuristicSolve()
                 #println("init")
             end
 
-            #iteration[32-Nb+1,rd] = 1
+            iteration[init-Nb+1,rd] = 1
             for i in 1:size(iteration,2)
-                iteration[32-Nb+2,i] = 0
+                iteration[init-Nb+2,i] = 0
             end
-            #println("erase ", 32-Nb+2)
+            """
+            if  Nb < 5 
+                println("erase ", init-Nb+2)
+                println(iteration)
+                println(tk)
+                println(Move)
+                println(M)
+                println(attempts)
+            end
+            """
         end
-        
+
 
     end
-    return Move 
+    if Nbmin == 1
+        isSolution = true
+    end
+
+    return isSolution, OPT, Nbmin 
 
 end 
 
@@ -489,7 +540,7 @@ function solveDataSet()
                         println("In file resolution.jl, in method solveDataSet(), TODO: fix heuristicSolve() arguments and returned values")
                         
                         # Solve it and get the results
-                        isOptimal, resolutionTime = heuristicSolve()
+                        isOptimal, Move, Nb = heuristicSolve()
 
                         # Stop the chronometer
                         resolutionTime = time() - startingTime
@@ -498,10 +549,7 @@ function solveDataSet()
 
                     # Write the solution (if any)
                     if isOptimal
-
-                        # TODO
-                        println("In file resolution.jl, in method solveDataSet(), TODO: write the heuristic solution in fout")
-                        
+                        writeSolution(fout, Move)
                     end 
                 end
 

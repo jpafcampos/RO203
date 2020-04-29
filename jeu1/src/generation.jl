@@ -9,8 +9,8 @@ end
 ############################ GENERATE FILLED GRID ##############################
 
 function generateRandomInd(n) 
-  seed = Int64(ceil(40*rand()));
-  size = n*n;
+  seed = Int64(ceil(40*rand()))
+  #size = n*n
   individual = Array{Int64, 2}(undef, n, n)
   i = Int64(1)
   row = Array{Int64, 1}(undef, n)
@@ -35,7 +35,9 @@ function generateRandomInd(n)
 
   temp = temp'
   temp = individual[perm[3], :]
-  individual[perm[3],:] = individual[perm[4],:]
+  if n >= 4
+    individual[perm[3],:] = individual[perm[4],:]
+  end
   individual[perm[3],:] = temp
   println(individual)
 
@@ -170,16 +172,16 @@ Remark: a grid is generated only if the corresponding output file does not alrea
 function generateDataSet()
 
     # For each grid size considered
-    for size in [5, 6, 8, 10]
+    for size in [3]
         ind = generateInstance(size)
         # Generate 10 instances
         for instance in 1:10
 
-            fileName = "data/instance_n" * string(size) * "_" * string(instance) * ".txt"
+            fileName = "data/instance_n" * string(size) * "_" * string(instance) * "a.txt"
 
             if !isfile(fileName)
                 println("-- Generating file " * fileName)
-                saveInstance(generateInstance(ind), fileName) 
+                saveInstance(ind, fileName) 
             end
         end
     end

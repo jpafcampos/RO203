@@ -197,7 +197,7 @@ function solveDataSet()
                         n = size(t,2)
 
                         # Solve it and get the results
-                        isOptimal, ind = GA(n,Tpop,t) #CHECKER BON RETOUR
+                        isOptimal, best = GA(n,Tpop,t)
 
                         # Stop the chronometer
                         resolutionTime = time() - startingTime
@@ -208,7 +208,7 @@ function solveDataSet()
 
                     # Write the solution (if any)
                     if isOptimal
-                        writeSolution(fout, solution)
+                        writeSolution(fout, best)
                     end """
                 end
 

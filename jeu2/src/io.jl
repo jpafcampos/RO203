@@ -65,6 +65,41 @@ function displayGrid(t::Array{Int64, 2})
 end
 
 
+############################### WRITESOLUTION ######################################
+
+
+"""
+Write a solution in an output stream
+
+Arguments
+- fout: the output stream (usually an output file)
+- t: 2-dimensional array of size n*n
+"""
+function writeSolution(fout::IOStream, Move::Array{Int64, 2})
+    
+    println(fout, "Move = [")
+    n = size(Move, 1)
+    
+    for l in 1:n
+
+        print(fout, "[ ")
+        
+        for c in 1:3
+            print(fout, string(Move[l, c]) * " ")
+        end 
+
+        endLine = "]"
+
+        if l != n
+            endLine *= ";"
+        end
+
+        println(fout, endLine)
+    end
+
+    println(fout, "]")
+end 
+
 ############################### DIAGRAMMEPERF ######################################
 
 
