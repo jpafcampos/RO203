@@ -379,7 +379,9 @@ function generateRandomIndividual(n)
 
     temp = temp'
     temp = individual[perm[3], :]
-    individual[perm[3],:] = individual[perm[4],:]
+    if n>=4
+      individual[perm[3],:] = individual[perm[4],:]
+    end
     individual[perm[3],:] = temp
 
 
@@ -716,7 +718,7 @@ function GA(n, k, cont)
     currentBestFit = 0
     contPlateau = 0
 
-    while(!found && maxIter < 20000)
+    while(!found && maxIter < 2000)
       #println(maxIter)
 
       fit, indexFit = sortByFitness(pop, cont)
@@ -725,7 +727,8 @@ function GA(n, k, cont)
       bestInd = bestInd'
       ind = bestInd
       currentBestFit = fit[indexFit[1]]
-      println(currentBestFit)
+      #println(currentBestFit)
+
       if fit[indexFit[1]] == n*4
         found = true
         ind = pop[indexFit[1],:]
@@ -803,7 +806,10 @@ function GA(n, k, cont)
     println(fitness(ind, cont))
     println(time()- start)
     println(maxIter)
-    return pop, ind
+    ind = reshape(ind,n,n)
+    ind = ind'
+    ind = convert(Array{Int64, 2}, ind)
+    return found, ind
 
 
 end

@@ -197,7 +197,7 @@ Arguments
 - fout: the output stream (usually an output file)
 - x: 3-dimensional variables array such that x[i, j, k] = 1 if cell (i, j) has value k
 """
-function writeSolution(fout::IOStream, x::Array{VariableRef,3})
+function wSolution(fout::IOStream, x::Array{VariableRef,3})
 
     # Convert the solution from x[i, j, k] variables into t[i, j] variables
     n = size(x, 1)

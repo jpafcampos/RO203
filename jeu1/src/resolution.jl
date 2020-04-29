@@ -2,12 +2,12 @@
 
 #using CPLEX
 using JuMP
-using Cbc
-#using CPLEX
+#using Cbc
+using CPLEX
 
 
 include("generation.jl")
-#include("GA.jl")
+include("GA.jl")
 
 TOL = 0.00001
 
@@ -36,9 +36,9 @@ function cplexSolve(t::Array{Int64, 2})
 
     # Create the model (two possible solvers, chose one)
     #CPLEX
-    #m = Model(CPLEX.Optimizer)
+    m = Model(CPLEX.Optimizer)
     #CBC
-    m = Model(with_optimizer(Cbc.Optimizer))
+    #m = Model(with_optimizer(Cbc.Optimizer))
 
 
     # x[i, j, k] = 1 if cell (i, j) has value k
@@ -134,7 +134,7 @@ function solveDataSet()
     resFolder = "res/"
 
     # Array which contains the name of the resolution methods
-    resolutionMethod = ["cplex"]
+    resolutionMethod = ["cplex", "GA"]
 
     # Array which contains the result folder of each resolution method
     resolutionFolder = resFolder .* resolutionMethod
@@ -151,7 +151,7 @@ function solveDataSet()
 
     # For each instance
     # (for each file in folder dataFolder which ends by ".txt")
-    for file in filter(x->occursin(".txt", x), readdir(dataFolder))
+    for file in filter(x->occursin("a.txt", x), readdir(dataFolder))
 
         println("-- Resolution of ", file)
         t = readInputFile(dataFolder * file)
@@ -159,7 +159,7 @@ function solveDataSet()
         # For each resolution method
         for methodId in 1:size(resolutionMethod, 1)
 
-            outputFile = resolutionFolder[methodId] * "/" * file
+            outputFile = resolutionFolder[methodId] * "/a" * file
 
             # If the instance has not already been solved by this method
             #if !isfile(outputFile)
@@ -178,9 +178,9 @@ function solveDataSet()
 
                     # If a solution is found, write it
                     if isOptimal 
-                        writeSolution(fout, x)
+                        wSolution(fout, x)
                     end
-"""
+
                 # If the method is one of the heuristics
                 else
 
@@ -191,13 +191,13 @@ function solveDataSet()
                     solution = []
 
                     # While the grid is not solved and less than 100 seconds are elapsed
-                    while !isOptimal && resolutionTime < 1000
+                    while !isOptimal && resolutionTime < 300
                         print(".")
-                        Tpop = 20 #taille de la population
+                        Tpop = 32 #taille de la population
                         n = size(t,2)
 
                         # Solve it and get the results
-                        isOptimal, best = GA(n,Tpop,t)
+                        isOptimal, solution = GA(n,Tpop,t)
 
                         # Stop the chronometer
                         resolutionTime = time() - startingTime
@@ -208,8 +208,8 @@ function solveDataSet()
 
                     # Write the solution (if any)
                     if isOptimal
-                        writeSolution(fout, best)
-                    end """
+                        writeSolution(fout, solution)
+                    end 
                 end
 
                 println(fout, "solveTime = ", resolutionTime)
