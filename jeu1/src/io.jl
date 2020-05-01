@@ -322,7 +322,7 @@ function performanceDiagram(outputFile::String)
             fileCount = 0
 
             # For each text file in the subfolder
-            for resultFile in filter(x->occursin(".txt", x), readdir(path))
+            for resultFile in filter(x->occursin("a.txt", x), readdir(path))
 
                 fileCount += 1
                 include(path * "/" * resultFile)

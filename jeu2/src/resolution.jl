@@ -8,62 +8,6 @@ include("io.jl")
 TOL = 0.00001
 
 
-############################### CPLEX ######################################
-
-"""
-Solve an instance with CPLEX
-"""
-
-function cplexSolve(grid::Array{Int64, 2})
-
-    n = size(grid, 1) #taille de la grille
-
-    # Create the model
-    m = Model(CPLEX.Optimizer)
-
-    #variable d'environnement au coup k
-    @variable(m, x[1:n, 1:n, 1:n*n], Int64)
-    #variable pour le coup k
-    @variable(m, y[1:n, 1:n, 1:4, 1:n*n], Bin)
-
-    
-    """
-    #constraints of the grid
-    # 1 : bas  ;  2 : gauche  ;  3 : haut  ;  4 : droite
-    @constraints(m, [i in 1:n, j in 1:n], x[i,j,1] == grid[i,j])
-    @constraints(m, [i in 1:n, k in 1:n*n], y[i,1,2,k] == 0)
-    @constraints(m, [i in 1:n, k in 1:n*n], y[i,n,4,k] == 0)
-    @constraints(m, [j in 1:n, k in 1:n*n], y[1,j,3,k] == 0)
-    @constraints(m, [j in 1:n, k in 1:n*n], y[n,j,1,k] == 0)
-
-    for i in 1:n
-        for j in 1:n
-            if grid[i,j] == -1
-                @constraints(m, [d in 1:4, k in 1:n*n], y[i,j,d,k] == 0)
-            elseif grid[i,j-1] == -1
-                @constraints(m, [k in 1:n*n], y[i,j,2,k] == 0)
-            elseif grid[i,j+1] == -1
-                @constraints(m, [k in 1:n*n], y[i,j,4,k] == 0)
-            elseif grid[i-1,j] == -1
-                @constraints(m, [k in 1:n*n], y[i,j,3,k] == 0)
-            elseif grid[i+1,j] == -1
-                @constraints(m, [k in 1:n*n], y[i,j,1,k] == 0)
-            end
-        end
-    end
-    """
-    # Start a chronometer
-    start = time()
-
-    # Solve the model
-    optimize!(m)
-
-    # Return:
-    # 1 - true if an optimum is found
-    # 2 - the resolution time
-    return JuMP.primal_status(m) == JuMP.MathOptInterface.FEASIBLE_POINT, time() - start
-    
-end
 
 
 ############################# HEURISTIC ####################################
@@ -76,13 +20,13 @@ Heuristically solve an instance (on parcourt toutes les branches)
 
 function heuristicSolve()
 
-    t = readInputFile("data/test2.txt") 
-    init = 11
-    #init = 32
-    #Nb = 32 #nbr boules 
-    Nb = 11
+    t = readInputFile("data/test1.txt") 
+    #init = 11
+    init = 32
+    Nb = 32 #nbr boules 
+    #Nb = 11
     Move = zeros(Int64,Nb,3)
-    iteration = zeros(Int64,Nb,20) #choix coup à l'itération k ( 20 coup max)
+    iteration = zeros(Int64,Nb,20) #choix coup à l'iteration k ( 20 coup max)
     isSolution = false 
     tk = t
     rd = Int(1)
@@ -90,25 +34,25 @@ function heuristicSolve()
     c = 5
     d = 1
     branch = true
-    rd = ceil.(Int, N*rand())
+    rd = 1
     attempts = 1 
     a = 0   #compteur
     OPT = zeros(Int64,Nb,3)
     Nbmin = init
 
     
-    while Nb != 1 && a < 10000000
+    while Nb != 1 && a < 100000
         M = possiblemove(tk) #possible move in the grid
         N = size(M,1)-2 #number of move
-        println("N=",N)
-        println("tentative ", attempts)
-        println(M)
+        #println("N=",N)
+        #println("tentative ", attempts)
+        #println(M)
         a += 1
 
         
         while attempts != N &&  N != 0
             
-            #println("tentative 2   ", attempts)
+            #println("tentative   ", attempts)
             if branch
                 rd = ceil.(Int, N*rand())
                 attempts = 1
@@ -119,8 +63,8 @@ function heuristicSolve()
                 end
             end
             if Nb == init
-                println(iteration)
-                println("iteration[",32-Nb+1, ",", rd, "] = ",1)
+                #println(iteration)
+                #println("iteration[",init-Nb+1, ",", rd, "] = ",1)
             end
             #println("iteration[",32-Nb+1, ",", rd, "] = ",1)
             #a += 1
@@ -154,9 +98,9 @@ function heuristicSolve()
                     #println(iteration)
                 end
                 #println(tk)
-                println("--------------------", Nb, "----------------")
+                #println("--------------------", Nb, "----------------")
                 
-                displayGrid(tk)
+                #displayGrid(tk)
                 Nb -= 1
                 Move[init-Nb,1] = l 
                 Move[init-Nb,2] = c 
@@ -169,10 +113,10 @@ function heuristicSolve()
                 end
 
                 iteration[init-Nb, rd] = 1
-                println(iteration)
+                #println(iteration)
                
                 M = possiblemove(tk) #possible move in the grid
-                println("M=",M)
+                #println("M=",M)
                 N = size(M,1)-2 #number of move
                 branch = true
                 """
@@ -199,7 +143,7 @@ function heuristicSolve()
                 """
                 #println("rand = ", rd)
             end
-            println("Move = ", Move)
+            #println("Move = ", Move)
         end
         #println("Move = ", Move)
         #if no possible move or all move already test go back
@@ -208,7 +152,7 @@ function heuristicSolve()
         if ((N == 0) || (attempts == N)) && Nb != 1 && Nb != init
             #println("000000-----------------------------------------------------------------------------------------")
             
-            println("notvalid, Nb= ", Nb)
+            #println("notvalid, Nb= ", Nb)
             #println("n=0 : ", N==0)
             #println("attempts=N : ", attempts == N)
             branch = true
@@ -216,8 +160,8 @@ function heuristicSolve()
             l = Move[init-Nb,1]
             c = Move[init-Nb,2]
             d = Move[init-Nb,3]
-            println(32-Nb)
-            println(l, ",", c, ",", d)
+            #println(32-Nb)
+            #println(l, ",", c, ",", d)
             #displayGrid(tk)
             tk = unmove(tk, l, c, d)
             #displayGrid(tk)
@@ -229,7 +173,7 @@ function heuristicSolve()
             Move[init-Nb,2] = 0
             Move[init-Nb,3] = 0
             if Nb > 28 || Nb < 5 
-                println("Move = ", Move)
+                #println("Move = ", Move)
             end
             Nb += 1
 
