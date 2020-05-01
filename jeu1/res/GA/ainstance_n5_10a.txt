@@ -1,9 +1,2 @@
-x = [
-[ 2 4 5 3 1 ];
-[ 1 2 3 4 5 ];
-[ 5 1 4 2 3 ];
-[ 3 5 2 1 4 ];
-[ 4 3 1 5 2 ]
-]
-solveTime = 587.058000087738
-isOptimal = true
+solveTime = 308.74399995803833
+isOptimal = false

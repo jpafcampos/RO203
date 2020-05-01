@@ -5,5 +5,5 @@ x = [
 [ 3 5 2 1 4 ];
 [ 4 3 1 5 2 ]
 ]
-solveTime = 32.462000131607056
+solveTime = 109.14800000190735
 isOptimal = true
