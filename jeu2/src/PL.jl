@@ -91,25 +91,42 @@ function cplexSolve()
     #@constraint(m, [i in 1:n, j in 1:5, t in 1:31], E[i, j, t]-E[i, j, t+1]==sum(C[i, j, t, d] for d in 1 : 4) + C[i, j+1, t, 4] - C[i, j+2, t, 4])
 
     #coups vers le bas
-    @constraint(m, [i in 1:2, j in 3:5, t in 1:31], E[i+2, j, t] - E[i+2, j, t+1] == sum(C[i+2, j, t, d] for d in 1 : 4) + C[i+1, j, t, 1] - C[i, j, t, 1])
-    @constraint(m, [i in 3:3, j in 1:7, t in 1:31], E[i+2, j, t] - E[i+2, j, t+1] == sum(C[i+2, j, t, d] for d in 1 : 4) + C[i+1, j, t, 1] - C[i, j, t, 1])
-    @constraint(m, [i in 4:5, j in 3:5, t in 1:31], E[i+2, j, t] - E[i+2, j, t+1] == sum(C[i+2, j, t, d] for d in 1 : 4) + C[i+1, j, t, 1] - C[i, j, t, 1])
+    #@constraint(m, [i in 1:2, j in 3:5, t in 1:31], E[i+2, j, t] - E[i+2, j, t+1] == sum(C[i+2, j, t, d] for d in 1 : 4) + C[i+1, j, #t, 1] - C[i, j, t, 1])
+    #@constraint(m, [i in 3:3, j in 1:7, t in 1:31], E[i+2, j, t] - E[i+2, j, t+1] == sum(C[i+2, j, t, d] for d in 1 : 4) + C[i+1, j, #t, 1] - C[i, j, t, 1])
+    #@constraint(m, [i in 4:5, j in 3:5, t in 1:31], E[i+2, j, t] - E[i+2, j, t+1] == sum(C[i+2, j, t, d] for d in 1 : 4) + C[i+1, j, #t, 1] - C[i, j, t, 1])
+#
+    ##coups vers le haut
+    #@constraint(m, [i in 6:7, j in 3:5, t in 1:31], E[i-2, j, t] - E[i-2, j, t+1] == sum(C[i-2, j, t, d] for d in 1 : 4) + C[i-1, j, #t, 2] - C[i, j, t, 2])
+    #@constraint(m, [i in 5:5, j in 1:7, t in 1:31], E[i-2, j, t] - E[i-2, j, t+1] == sum(C[i-2, j, t, d] for d in 1 : 4) + C[i-1, j, #t, 2] - C[i, j, t, 2])
+    #@constraint(m, [i in 3:4, j in 3:5, t in 1:31], E[i-2, j, t] - E[i-2, j, t+1] == sum(C[i-2, j, t, d] for d in 1 : 4) + C[i-1, j, #t, 1] - C[i, j, t, 2])
+#
+    ##coups vers la droite
+    #@constraint(m, [i in 1:2, j in 1:1, t in 1:31], E[i, j+2, t] - E[i, j+2, t+1] == sum(C[i, j+2, t, d] for d in 1 : 4) + C[i, j+1, #t, 1] - C[i, j, t, 3])
+    #@constraint(m, [i in 3:5, j in 1:5, t in 1:31], E[i, j+2, t] - E[i, j+2, t+1] == sum(C[i, j+2, t, d] for d in 1 : 4) + C[i, j+1, #t, 1] - C[i, j, t, 3])
+    #@constraint(m, [i in 6:7, j in 1:1, t in 1:31], E[i, j+2, t] - E[i, j+2, t+1] == sum(C[i, j+2, t, d] for d in 1 : 4) + C[i, j+1, #t, 1] - C[i, j, t, 3])
+#
+    ##coups vers la gauche
+    #@constraint(m, [i in 1:2, j in 5:5, t in 1:31], E[i, j-2, t] - E[i, j-2, t+1] == sum(C[i, j-2, t, d] for d in 1 : 4) + C[i, j-1, #t, 1] - C[i, j, t, 4])
+    #@constraint(m, [i in 3:5, j in 3:7, t in 1:31], E[i, j-2, t] - E[i, j-2, t+1] == sum(C[i, j-2, t, d] for d in 1 : 4) + C[i, j-1, #t, 1] - C[i, j, t, 4])
+    #@constraint(m, [i in 6:7, j in 5:5, t in 1:31], E[i, j-2, t] - E[i, j-2, t+1] == sum(C[i, j-2, t, d] for d in 1 : 4) + C[i, j-1, t, 1] - C[i, j, t, 4])
 
-    #coups vers le haut
-    @constraint(m, [i in 6:7, j in 3:5, t in 1:31], E[i-2, j, t] - E[i-2, j, t+1] == sum(C[i-2, j, t, d] for d in 1 : 4) + C[i-1, j, t, 2] - C[i, j, t, 2])
-    @constraint(m, [i in 5:5, j in 1:7, t in 1:31], E[i-2, j, t] - E[i-2, j, t+1] == sum(C[i-2, j, t, d] for d in 1 : 4) + C[i-1, j, t, 2] - C[i, j, t, 2])
-    @constraint(m, [i in 3:4, j in 3:5, t in 1:31], E[i-2, j, t] - E[i-2, j, t+1] == sum(C[i-2, j, t, d] for d in 1 : 4) + C[i-1, j, t, 1] - C[i, j, t, 2])
+    #coups infaisables
+    #vers le bas
+    @constraint(m, [i in 4:5, j in 1:2, t in 1:31], C[i,j,t,1] == 0)
+    @constraint(m, [i in 4:5, j in 6:7, t in 1:31], C[i,j,t,1] == 0)
 
-    #coups vers la droite
-    @constraint(m, [i in 1:2, j in 1:1, t in 1:31], E[i, j+2, t] - E[i, j+2, t+1] == sum(C[i, j+2, t, d] for d in 1 : 4) + C[i, j+1, t, 1] - C[i, j, t, 3])
-    @constraint(m, [i in 3:5, j in 1:5, t in 1:31], E[i, j+2, t] - E[i, j+2, t+1] == sum(C[i, j+2, t, d] for d in 1 : 4) + C[i, j+1, t, 1] - C[i, j, t, 3])
-    @constraint(m, [i in 6:7, j in 1:1, t in 1:31], E[i, j+2, t] - E[i, j+2, t+1] == sum(C[i, j+2, t, d] for d in 1 : 4) + C[i, j+1, t, 1] - C[i, j, t, 3])
+    #vers le haut
+    @constraint(m, [i in 3:4, j in 1:2, t in 1:31], C[i,j,t,2] == 0)
+    @constraint(m, [i in 3:4, j in 6:7, t in 1:31], C[i,j,t,2] == 0)
 
-    #cousp vers la gauche
-    @constraint(m, [i in 1:2, j in 5:5, t in 1:31], E[i, j-2, t] - E[i, j-2, t+1] == sum(C[i, j-2, t, d] for d in 1 : 4) + C[i, j-1, t, 1] - C[i, j, t, 4])
-    @constraint(m, [i in 3:5, j in 3:7, t in 1:31], E[i, j-2, t] - E[i, j-2, t+1] == sum(C[i, j-2, t, d] for d in 1 : 4) + C[i, j-1, t, 1] - C[i, j, t, 4])
-    @constraint(m, [i in 6:7, j in 5:5, t in 1:31], E[i, j-2, t] - E[i, j-2, t+1] == sum(C[i, j-2, t, d] for d in 1 : 4) + C[i, j-1, t, 1] - C[i, j, t, 4])
+    #vers la droite
+    @constraint(m, [i in 1:2, j in 4:5, t in 1:31], C[i,j,t,3] == 0)
+    @constraint(m, [i in 6:7, j in 4:5, t in 1:31], C[i,j,t,3] == 0)
 
+    #vers la gauche
+    @constraint(m, [i in 1:2, j in 3:4, t in 1:31], C[i,j,t,4] == 0)
+    @constraint(m, [i in 6:7, j in 3:4, t in 1:31], C[i,j,t,4] == 0)
+ 
     #les bords de la grille
     @constraint(m, [i in 6:7, j in 3:5, t in 1:31], C[i,j,t,1] == 0)
     @constraint(m, [i in 1:2, j in 3:5, t in 1:31], C[i,j,t,2] == 0)
@@ -117,7 +134,10 @@ function cplexSolve()
     @constraint(m, [i in 3:5, j in 1:2, t in 1:31], C[i,j,t,4] == 0)
 
     #un coup par t
-    @constraint(m, [i in 1:n, j in 1:n, t in 1:31], sum(C[i, j, t, d] for d in 1:4) <= 1  )
+    #@constraint(m, [i in 1:n, j in 1:n, t in 1:31], sum(C[i, j, t, d] for d in 1:4) <= 1  )
+
+    @constraint(m, [t in 1:31], sum(C[i,j,t,d] for i in 1:n, j in 1:n, d in 1:4) == 1)
+    @constraint(m, [t in 1:31], sum(E[i,j,t] for i in 1:n, j in 1:n) == 32-t+1)
 
     #à la fin il faut y avoir un seul peg
     #@constraint(m, [i in 1:7, j in 1:7], sum(E[i,j,32]) == 1)
